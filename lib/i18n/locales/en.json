@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "title": "SYNCHRONICITY'26 Route Planner",
+    "description": "Plan your SYNCHRONICITY'26 festival route"
+  },
+  "nav": {
+    "home": "Home",
+    "timetable": "Timetable",
+    "map": "Map",
+    "plan": "Plan"
+  },
+  "home": {
+    "subtitle": "SYNCHRONICITY'26",
+    "title": "Route Planner",
+    "tagline": "Navigate Shibuya livehouses efficiently",
+    "ctaTimetable": "View Timetable",
+    "ctaPlan": "Check My Plan",
+    "ctaMap": "Open Venue Map",
+    "date": "Apr 11 SAT - Apr 12 SUN @ Shibuya",
+    "stats": {
+      "venues": "Venues",
+      "artists": "Artists",
+      "sets": "Sets"
+    }
+  },
+  "timetable": {
+    "title": "Timetable",
+    "favoritesOnly": "Favorites",
+    "areaA": "Area A",
+    "areaB": "Area B",
+    "areaOther": "Other",
+    "empty": "No favorite artists yet. Tap the heart icon in the timetable to add some.",
+    "tabs": {
+      "day1": "Apr 11 SAT",
+      "day2": "Apr 12 SUN"
+    },
+    "addFavorite": "Add to favorites",
+    "removeFavorite": "Remove from favorites",
+    "clearFavorites": "Clear all",
+    "clearConfirm": "Are you sure you want to remove all favorites?",
+    "searchPlaceholder": "Search artist or stage",
+    "clearSearch": "Clear search",
+    "noResults": "No matching artists found.",
+    "otherAtVenue": "Other sets at this venue",
+    "otherDays": "Other days"
+  },
+  "plan": {
+    "title": "My Plan",
+    "scoreLabel": "Plan Score",
+    "scoreDetail": "Impossible {impossible} / Avg buffer {buffer} min",
+    "empty": "No favorite artists yet. Tap the heart icon in the timetable to add some.",
+    "browseTimetable": "Browse timetable",
+    "copyPlan": "Copy plan",
+    "copied": "Copied!",
+    "exportCalendar": "Export calendar",
+    "share": "Share",
+    "tabs": {
+      "day1": "Apr 11 SAT",
+      "day2": "Apr 12 SUN"
+    },
+    "leg": {
+      "walk": "Walk {minutes} min",
+      "buffer": "Buffer {minutes} min",
+      "statusComfortable": "(comfortable)",
+      "statusJustRight": "(just right)",
+      "statusTight": "(tight)",
+      "statusImpossible": "(need shadow clone)"
+    }
+  },
+  "score": {
+    "relaxed": "Relaxed Pacing",
+    "master": "Time Management Master",
+    "shadowClone": "Need Shadow Clones",
+    "adviceRelaxed": "Plenty of time between sets. Good chance to grab food or drinks nearby.",
+    "adviceMaster": "Technically possible, but very tight. Consider leaving sets a bit early.",
+    "adviceShadowClone_one": "1 move is impossible. You'll need to skip one set or leave early.",
+    "adviceShadowClone_other": "{count} moves are impossible. Try dropping lower-priority sets."
+  },
+  "map": {
+    "title": "Map",
+    "selectedCount_one": "{count} set selected",
+    "selectedCount_other": "{count} sets selected",
+    "routeSets_one": "{count} set",
+    "routeSets_other": "{count} sets",
+    "minutesUnit": " min",
+    "loading": "Loading map…",
+    "tabs": {
+      "day1": "Apr 11 SAT",
+      "day2": "Apr 12 SUN"
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist.",
+    "goHome": "Go home"
+  },
+  "localeSwitcher": {
+    "label": "Language"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "title": "SYNCHRONICITY'26 Route Planner",
+    "description": "渋谷のライブハウスを効率よく回ろう"
+  },
+  "nav": {
+    "home": "ホーム",
+    "timetable": "タイムテーブル",
+    "map": "マップ",
+    "plan": "プラン"
+  },
+  "home": {
+    "subtitle": "SYNCHRONICITY'26",
+    "title": "Route Planner",
+    "tagline": "渋谷のライブハウスを効率よく回ろう",
+    "ctaTimetable": "タイムテーブルを見る",
+    "ctaPlan": "マイプランを確認",
+    "ctaMap": "会場マップを開く",
+    "date": "4.11 SAT - 4.12 SUN @ Shibuya",
+    "stats": {
+      "venues": "会場",
+      "artists": "アーティスト",
+      "sets": "セット"
+    }
+  },
+  "timetable": {
+    "title": "タイムテーブル",
+    "favoritesOnly": "お気に入り",
+    "areaA": "Aエリア",
+    "areaB": "Bエリア",
+    "areaOther": "その他",
+    "empty": "お気に入りにしたアーティストがいません。タイムテーブルでハートマークをタップして追加してください。",
+    "tabs": {
+      "day1": "4.11 SAT",
+      "day2": "4.12 SUN"
+    },
+    "addFavorite": "お気に入りに追加",
+    "removeFavorite": "お気に入りから削除",
+    "clearFavorites": "すべて削除",
+    "clearConfirm": "すべてのお気に入りを削除しますか？",
+    "searchPlaceholder": "アーティスト・ステージを検索",
+    "clearSearch": "検索をクリア",
+    "noResults": "該当するアーティストが見つかりませんでした。",
+    "otherAtVenue": "同じ会場の他のセット",
+    "otherDays": "他の日"
+  },
+  "plan": {
+    "title": "マイプラン",
+    "scoreLabel": "プラン評価",
+    "scoreDetail": "移動 {impossible} 不可 / 余裕 {buffer}分",
+    "empty": "お気に入りにしたアーティストがいません。タイムテーブルでハートマークをタップして追加してください。",
+    "browseTimetable": "タイムテーブルを見る",
+    "copyPlan": "プランをコピー",
+    "copied": "コピーしました！",
+    "exportCalendar": "カレンダーに書き出し",
+    "share": "共有",
+    "tabs": {
+      "day1": "4.11 SAT",
+      "day2": "4.12 SUN"
+    },
+    "leg": {
+      "walk": "徒歩 {minutes}分",
+      "buffer": "余裕 {minutes}分",
+      "statusComfortable": "（ゆっくり）",
+      "statusJustRight": "（ちょうどいい）",
+      "statusTight": "（ギリギリ）",
+      "statusImpossible": "（影分身が必要）"
+    }
+  },
+  "score": {
+    "relaxed": "ゆっくり楽しめる",
+    "master": "タイム管理マスター",
+    "shadowClone": "影分身が必要",
+    "adviceRelaxed": "移動に余裕があり、周辺の飲食店にも立ち寄れそうです。",
+    "adviceMaster": "移動は可能ですが、ピンポイントです。前のセットは少し早めに退出すると安心です。",
+    "adviceShadowClone_one": "1 箇所の移動が間に合いません。どちらかを諦めるか、途中で退出してください。",
+    "adviceShadowClone_other": "{count} 箇所の移動が不可能です。優先度の低いセットを減らしてみてください。"
+  },
+  "map": {
+    "title": "マップ",
+    "selectedCount": "{count} セット選択中",
+    "routeSets": "{count} セット",
+    "minutesUnit": "分",
+    "loading": "マップを読み込み中…",
+    "tabs": {
+      "day1": "4.11 SAT",
+      "day2": "4.12 SUN"
+    }
+  },
+  "notFound": {
+    "title": "ページが見つかりません",
+    "description": "お探しのページは存在しません。",
+    "goHome": "ホームに戻る"
+  },
+  "localeSwitcher": {
+    "label": "言語"
+  }
+}
