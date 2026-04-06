@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useParams, useRouter } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/client";
 import type { Locale } from "@/lib/i18n/settings";
-import { CalendarDays, Map, Route, Home, Languages } from "lucide-react";
+import { CalendarDays, Map, Route, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 type TabDef = {
   path: string;
@@ -23,22 +24,13 @@ const tabs: TabDef[] = [
 export function BottomNav() {
   const pathname = usePathname();
   const params = useParams();
-  const router = useRouter();
   const { t } = useTranslation();
   const locale = (params?.locale as Locale) || "ja";
-
-  const switchLocale = () => {
-    const locales = ["ja", "zh", "en"];
-    const idx = locales.indexOf(locale);
-    const next = locales[(idx + 1) % locales.length];
-    const newPath = pathname.replace(`/${locale}`, `/${next}`) || `/${next}`;
-    router.push(newPath);
-  };
 
   return (
     <>
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-zinc-800 bg-[#0a0a0a]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0a0a0a]/80 md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-800 bg-[#0a0a0a]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0a0a0a]/80 md:hidden">
         <div className="mx-auto flex max-w-md justify-around">
           {tabs.map((tab) => {
             const href = tab.path ? `/${locale}/${tab.path}` : `/${locale}`;
@@ -65,7 +57,7 @@ export function BottomNav() {
       </nav>
 
       {/* Desktop sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 z-50 hidden w-56 flex-col border-r border-zinc-800 bg-[#0a0a0a] md:flex">
+      <aside className="fixed left-0 top-0 bottom-0 z-40 hidden w-56 flex-col border-r border-zinc-800 bg-[#0a0a0a] md:flex">
         <div className="flex items-center gap-2 border-b border-zinc-800 px-4 py-4">
           <Link
             href={`/${locale}`}
@@ -99,25 +91,12 @@ export function BottomNav() {
           })}
         </div>
         <div className="border-t border-zinc-800 px-3 py-3">
-          <button
-            onClick={switchLocale}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200"
-          >
-            <Languages className="h-4 w-4" />
-            <span className="uppercase">{locale}</span>
-            <span className="ml-auto text-xs text-zinc-600">{t("localeSwitcher.label")}</span>
-          </button>
+          <LocaleSwitcher />
         </div>
       </aside>
 
-      {/* Mobile locale switcher floating button */}
-      <button
-        onClick={switchLocale}
-        className="fixed right-3 top-3 z-50 flex h-8 items-center gap-1 rounded-full border border-zinc-700 bg-[#0a0a0a]/80 px-3 text-xs font-medium text-zinc-300 backdrop-blur transition-colors hover:bg-zinc-800 md:hidden"
-      >
-        <Languages className="h-3.5 w-3.5" />
-        <span className="uppercase">{locale}</span>
-      </button>
+      {/* Mobile locale switcher */}
+      <LocaleSwitcher />
     </>
   );
 }

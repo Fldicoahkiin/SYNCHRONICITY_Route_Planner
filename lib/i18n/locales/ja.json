@@ -93,6 +93,9 @@
     "goHome": "ホームに戻る"
   },
   "localeSwitcher": {
-    "label": "言語"
+    "label": "言語",
+    "ja": "日本語",
+    "zh": "中文",
+    "en": "English"
   }
 }

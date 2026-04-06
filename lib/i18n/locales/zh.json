@@ -93,6 +93,9 @@
     "goHome": "返回首页"
   },
   "localeSwitcher": {
-    "label": "语言"
+    "label": "语言",
+    "ja": "日本語",
+    "zh": "中文",
+    "en": "English"
   }
 }

@@ -95,6 +95,9 @@
     "goHome": "Go home"
   },
   "localeSwitcher": {
-    "label": "Language"
+    "label": "Language",
+    "ja": "日本語",
+    "zh": "中文",
+    "en": "English"
   }
 }
