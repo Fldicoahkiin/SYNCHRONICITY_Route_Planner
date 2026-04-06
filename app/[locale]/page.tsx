@@ -48,8 +48,23 @@ export default function Home() {
       <div className="mx-auto w-full max-w-sm md:max-w-md">
         <div className="flex flex-col items-center text-center">
           <div className="relative">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-3xl font-bold text-white shadow-lg shadow-cyan-500/20">
-              26
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20">
+              <svg
+                width="44"
+                height="44"
+                viewBox="0 0 512 512"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M170 256c0-40 50-55 86-21 16-34 66-19 66 21s-50 55-66 21c-36 34-86 19-86-21"
+                  stroke="white"
+                  strokeWidth="52"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
             </div>
             <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-cyan-400"></div>
           </div>
