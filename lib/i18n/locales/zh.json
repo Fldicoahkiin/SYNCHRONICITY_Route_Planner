@@ -42,7 +42,22 @@
     "clearSearch": "清除搜索",
     "noResults": "未找到符合条件的艺人。",
     "otherAtVenue": "同会场其他演出",
-    "otherDays": "其他日期"
+    "otherDays": "其他日期",
+    "importFromImage": "从图片导入",
+    "import": {
+      "title": "从时间表图片导入",
+      "selectImage": "请选择 SYNCHRONICITY 应用的时间表截图。",
+      "scanning": "正在识别图片…",
+      "reviewMatches": "请核对识别出的艺人。",
+      "done": "导入完成。",
+      "tapToSelect": "点击选择图片",
+      "matchesFound": "找到 {count} 组艺人",
+      "noMatches": "未能识别出艺人，请尝试更清晰的截图。",
+      "dayLabel": "日期",
+      "dayAuto": "自动",
+      "confirm": "添加 {count} 组到收藏",
+      "cancel": "取消"
+    }
   },
   "plan": {
     "title": "我的行程",

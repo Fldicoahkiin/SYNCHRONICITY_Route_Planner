@@ -19,6 +19,7 @@ import { timetable, type TimetableSet } from "@/lib/data/timetable";
 import { venues, venueMap } from "@/lib/data/venues";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/route-planner";
+import { ImportFromImageButton } from "@/components/import-from-image";
 
 export default function TimetablePage() {
   const { t } = useTranslation();
@@ -89,6 +90,15 @@ export default function TimetablePage() {
                 {t("timetable.clearFavorites")}
               </button>
             )}
+            <ImportFromImageButton
+              onImportAction={(ids) => {
+                setFavorites((prev) => {
+                  const next = { ...prev };
+                  ids.forEach((id) => (next[id] = true));
+                  return next;
+                });
+              }}
+            />
             <Toggle
               pressed={showFavoritesOnly}
               onPressedChange={setShowFavoritesOnly}

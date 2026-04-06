@@ -42,7 +42,23 @@
     "clearSearch": "Clear search",
     "noResults": "No matching artists found.",
     "otherAtVenue": "Other sets at this venue",
-    "otherDays": "Other days"
+    "otherDays": "Other days",
+    "importFromImage": "Import image",
+    "import": {
+      "title": "Import from timetable image",
+      "selectImage": "Select a screenshot of your SYNCHRONICITY timetable.",
+      "scanning": "Reading image…",
+      "reviewMatches": "Review matched artists.",
+      "done": "Import complete.",
+      "tapToSelect": "Tap to select image",
+      "matchesFound": "{count} artists found",
+      "noMatches": "No artists recognized. Try a clearer screenshot.",
+      "dayLabel": "Day",
+      "dayAuto": "Auto",
+      "confirm_one": "Add 1 artist to favorites",
+      "confirm_other": "Add {count} artists to favorites",
+      "cancel": "Cancel"
+    }
   },
   "plan": {
     "title": "My Plan",
