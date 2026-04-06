@@ -55,7 +55,7 @@ pnpm run build       # Production build
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FFldicoahkiin%2FSYNCHRONICITY_Route_Planner)
 
 ### Cloudflare Pages
-[![Deploy to Cloudflare Pages](https://img.shields.io/badge/Deploy_to_Cloudflare_Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://dash.cloudflare.com/?to=/:account/pages/new)
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.pages.cloudflare.com/?url=https://github.com/Fldicoahkiin/SYNCHRONICITY_Route_Planner)
 
 ## Data Sources & Copyright Notice
 
