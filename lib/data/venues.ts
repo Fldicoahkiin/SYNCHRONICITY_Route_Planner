@@ -18,7 +18,7 @@ export const venues: Venue[] = [
     lat: 35.65879761,
     lng: 139.6955653,
     area: "A",
-    color: "#3b82f6",
+    color: "#0ea5e9",
   },
   {
     id: "duo",

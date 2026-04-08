@@ -1,9 +1,151 @@
 import Tesseract, { createWorker, type Worker } from "tesseract.js";
-import { timetable } from "@/lib/data/timetable";
-import { findBestMatch } from "./fuzzy-match";
+import { timetable, type TimetableSet } from "@/lib/data/timetable";
+import { levenshteinDistance } from "./fuzzy-match";
 
-const artistNames = Array.from(new Set(timetable.map((t) => t.artistName)));
-const artistNamesLower = artistNames.map((n) => n.toLowerCase());
+interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface StageHint {
+  stageName: string;
+  confidence: number;
+}
+
+interface RecognizedRegion {
+  text: string;
+  region: Rect;
+  timeHint: number | null;
+  stageHint: StageHint | null;
+}
+
+interface RankedSetCandidate {
+  set: TimetableSet;
+  score: number;
+}
+
+interface OCRProgressState {
+  completedJobs: number;
+  totalJobs: number;
+}
+
+interface PreparedArtistSearchText {
+  normalized: string;
+  compact: string;
+  phrases: string[];
+}
+
+const REGION_PROFILES = [
+  { minSaturation: 0.42, minLuma: 0.34, minChannel: 60 },
+  { minSaturation: 0.38, minLuma: 0.34, minChannel: 60 },
+  { minSaturation: 0.34, minLuma: 0.34, minChannel: 60 },
+  { minSaturation: 0.34, minLuma: 0.3, minChannel: 60 },
+];
+const MIN_REGION_COUNT = 6;
+const MAX_REGION_COUNT = 24;
+const REGION_PADDING = 8;
+const REGION_TARGET_WIDTH = 920;
+const TIME_HINT_WINDOW_MINUTES = 20;
+const ESTIMATED_TIME_WINDOW_MINUTES = 24;
+const CONFIDENT_MATCH_SCORE = 78;
+const CONFIDENT_MATCH_GAP = 10;
+const DIRECT_REGION_MATCH_MIN_SCORE = 60;
+const DIRECT_REGION_MATCH_GAP = 8;
+const REGION_MERGE_OVERLAP_RATIO = 0.18;
+const TOKYO_TIME_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: false,
+});
+
+const STAGE_ALIAS_OVERRIDES: Record<string, string[]> = {
+  "7thFLOOOR": ["7thfloor", "7thflooor"],
+  "O-EAST": ["oeast", "oeas"],
+  "O-EAST 2nd Stage": ["oeast2ndstage", "oeast2nd", "2ndstage"],
+  "O-EAST 3F LOBBY": ["oeast3flobby", "3flobby", "lobby"],
+  "O-WEST": ["owest", "owes"],
+  "O-nest": ["onest", "ones"],
+  "SHIBUYA CLUB QUATTRO": ["shibuyaclubquattro", "quattro"],
+  "SHIBUYA FOWS": ["shibuyafows", "fows"],
+  "TOKIO TOKYO": ["tokiotokyo"],
+  "Veats Shibuya": ["veatsshibuya", "veats"],
+  WWW: ["www"],
+  WWWX: ["wwwx"],
+  clubasia: ["clubasia"],
+  "duo MUSIC EXCHANGE": ["duomusicexchange", "duomusic", "musicexchange"],
+};
+
+const ARTIST_ALIAS_OVERRIDES: Record<string, string[]> = {
+  kurayamisaka: ["kurayamisa ka", "kurayamisa"],
+  "mudy on the 昨晩": ["mudy on the sakuban", "muddy on the sakuban"],
+  "サニーデイ・サービス": ["Sunny Day Service"],
+  "渋さ知らズオーケストラ": [
+    "Shibusashirazu-Orchestra",
+    "Shibusashirazu Orchestra",
+  ],
+  "揺れるは幽霊": ["yureruwayureru", "yureruwayurel"],
+  "神聖かまってちゃん": ["Shinsei Kamattechan"],
+  ひとひら: ["hitohira"],
+  雪国: ["Yukiguni"],
+};
+
+const artistNames = Array.from(new Set(timetable.map((set) => set.artistName)));
+const normalizedArtistNameMap = new Map(
+  artistNames.map((name) => [normalizeMatchText(name), name]),
+);
+const artistCandidates = artistNames.map((name) => {
+  const aliases = Array.from(
+    new Set([name, ...(ARTIST_ALIAS_OVERRIDES[name] ?? [])]),
+  );
+  const normalized = normalizeMatchText(name);
+  const normalizedAliases = aliases
+    .map(normalizeMatchText)
+    .filter(Boolean)
+    .filter((alias) => {
+      const actualArtist = normalizedArtistNameMap.get(alias);
+      return !actualArtist || actualArtist === name;
+    })
+    .sort((left, right) => right.length - left.length);
+
+  return {
+    name,
+    normalized,
+    compact: normalized.replace(/\s+/g, ""),
+    normalizedAliases,
+    compactAliases: normalizedAliases.map((alias) => alias.replace(/\s+/g, "")),
+  };
+});
+const artistCandidateMap = new Map(
+  artistCandidates.map((candidate) => [candidate.name, candidate]),
+);
+const stageCandidates = Array.from(new Set(timetable.map((set) => set.stageName)))
+  .map((stageName) => {
+    const aliases = new Set<string>([stageName]);
+    for (const alias of STAGE_ALIAS_OVERRIDES[stageName] ?? []) {
+      aliases.add(alias);
+    }
+
+    const normalizedAliases = Array.from(aliases)
+      .map(normalizeMatchText)
+      .filter(Boolean);
+
+    return {
+      stageName,
+      aliases: normalizedAliases.map((alias) => alias.replace(/\s+/g, "")),
+      normalizedAliases,
+    };
+  })
+  .sort((left, right) => {
+    const leftLength = Math.max(...left.aliases.map((alias) => alias.length));
+    const rightLength = Math.max(...right.aliases.map((alias) => alias.length));
+    return rightLength - leftLength;
+  });
+const setStartMinutes = new Map(
+  timetable.map((set) => [set.id, getSetStartMinutes(set.startAt)]),
+);
 
 export interface MatchResult {
   artistName: string;
@@ -17,15 +159,17 @@ export interface OCRResult {
   matches: MatchResult[];
 }
 
-export function detectDay(text: string): 1 | 2 | null {
-  const lower = text.toLowerCase();
-  if (/\bday\s*1\b/.test(lower) || /\bday1\b/.test(lower)) return 1;
-  if (/\bday\s*2\b/.test(lower) || /\bday2\b/.test(lower)) return 2;
-  if (/\b4[./]11\b/.test(text) || /\bapr(il)?\s*11\b/i.test(text)) return 1;
-  if (/\b4[./]12\b/.test(text) || /\bapr(il)?\s*12\b/i.test(text)) return 2;
-  if (/\bsat\b/i.test(text) && !/\bsun\b/i.test(text)) return 1;
-  if (/\bsun\b/i.test(text) && !/\bsat\b/i.test(text)) return 2;
-  return null;
+function normalizeMatchText(value: string): string {
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[＆&]/g, " and ")
+    .replace(/[‘’'`´]/g, "")
+    .replace(/[“”\"]/g, "")
+    .replace(/[()［］\[\]{}]/g, " ")
+    .replace(/[・/\\|:_.,!?-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function sanitizeLine(line: string): string {
@@ -35,48 +179,519 @@ function sanitizeLine(line: string): string {
     .trim();
 }
 
+function sanitizeBlockText(text: string): string {
+  return text
+    .replace(/\r/g, "")
+    .split("\n")
+    .map(sanitizeLine)
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildSearchPhrases(normalizedText: string): string[] {
+  const tokens = normalizedText.split(" ").filter(Boolean);
+  const phrases = new Set<string>();
+
+  if (normalizedText) {
+    phrases.add(normalizedText);
+    phrases.add(normalizedText.replace(/\s+/g, ""));
+  }
+
+  for (let start = 0; start < tokens.length; start++) {
+    for (let length = 1; length <= 4 && start + length <= tokens.length; length++) {
+      const phrase = tokens.slice(start, start + length).join(" ");
+      phrases.add(phrase);
+      phrases.add(phrase.replace(/\s+/g, ""));
+    }
+  }
+
+  return Array.from(phrases).filter(Boolean);
+}
+
+function getSimilarity(left: string, right: string): number {
+  if (!left || !right) {
+    return 0;
+  }
+
+  if (left === right) {
+    return 1;
+  }
+
+  const distance = levenshteinDistance(left, right);
+  return 1 - distance / Math.max(left.length, right.length);
+}
+
+function getSetStartMinutes(startAt: number): number {
+  const [hours, minutes] = TOKYO_TIME_FORMATTER.format(new Date(startAt * 1000))
+    .split(":")
+    .map(Number);
+  return hours * 60 + minutes;
+}
+
+function getTimeHint(text: string): number | null {
+  const match = text.match(/\b(\d{1,2})[:.](\d{2})\b/);
+  if (!match) {
+    return null;
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (
+    Number.isNaN(hours) ||
+    Number.isNaN(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+}
+
+function roundToNearest(value: number, step: number): number {
+  return Math.round(value / step) * step;
+}
+
+function buildTimeEstimator(
+  regions: RecognizedRegion[],
+): ((y: number) => number | null) | null {
+  const samples = regions
+    .filter((region) => region.timeHint !== null)
+    .map((region) => ({ x: region.region.y, y: region.timeHint! }));
+
+  if (samples.length < 2) {
+    return null;
+  }
+
+  const meanX = samples.reduce((sum, sample) => sum + sample.x, 0) / samples.length;
+  const meanY = samples.reduce((sum, sample) => sum + sample.y, 0) / samples.length;
+  const variance = samples.reduce(
+    (sum, sample) => sum + (sample.x - meanX) * (sample.x - meanX),
+    0,
+  );
+
+  if (variance === 0) {
+    return null;
+  }
+
+  const covariance = samples.reduce(
+    (sum, sample) => sum + (sample.x - meanX) * (sample.y - meanY),
+    0,
+  );
+  const slope = covariance / variance;
+
+  if (!Number.isFinite(slope) || slope <= 0.1 || slope >= 1) {
+    return null;
+  }
+
+  const intercept = meanY - slope * meanX;
+
+  return (y: number) => {
+    const estimated = intercept + slope * y;
+    if (!Number.isFinite(estimated) || estimated < 0 || estimated > 24 * 60) {
+      return null;
+    }
+    return roundToNearest(estimated, 5);
+  };
+}
+
+function findStageHint(text: string): StageHint | null {
+  const normalized = normalizeMatchText(text);
+  const compact = normalized.replace(/\s+/g, "");
+  const phrases = buildSearchPhrases(normalized);
+
+  let best: StageHint | null = null;
+
+  for (const candidate of stageCandidates) {
+    let confidence = 0;
+
+    for (const alias of candidate.aliases) {
+      if (compact.includes(alias)) {
+        confidence = Math.max(confidence, Math.min(1, 0.92 + alias.length / 100));
+        continue;
+      }
+
+      for (const phrase of phrases) {
+        const compactPhrase = phrase.replace(/\s+/g, "");
+        if (compactPhrase.length < 3) {
+          continue;
+        }
+        confidence = Math.max(confidence, getSimilarity(compactPhrase, alias));
+      }
+    }
+
+    if (!best || confidence > best.confidence) {
+      best = { stageName: candidate.stageName, confidence };
+    }
+  }
+
+  return best && best.confidence >= 0.72 ? best : null;
+}
+
+function removeTimeAndStage(text: string, stageHint: StageHint | null): string {
+  let normalized = normalizeMatchText(text).replace(/\b\d{1,2}\s+\d{2}\b/g, " ");
+
+  if (stageHint) {
+    const stage = stageCandidates.find(
+      (candidate) => candidate.stageName === stageHint.stageName,
+    );
+    for (const alias of stage?.normalizedAliases ?? []) {
+      normalized = normalized.replace(alias, " ");
+    }
+  }
+
+  return normalized.replace(/\s+/g, " ").trim();
+}
+
+function prepareArtistSearchText(
+  text: string,
+  stageHint: StageHint | null,
+): PreparedArtistSearchText | null {
+  const normalized = removeTimeAndStage(text, stageHint);
+  if (!normalized) {
+    return null;
+  }
+
+  return {
+    normalized,
+    compact: normalized.replace(/\s+/g, ""),
+    phrases: buildSearchPhrases(normalized),
+  };
+}
+
+function getArtistSimilarity(
+  searchText: PreparedArtistSearchText | null,
+  artistName: string,
+): number {
+  const artist = artistCandidateMap.get(artistName);
+
+  if (!artist || !searchText) {
+    return 0;
+  }
+
+  let best = 0;
+  for (let index = 0; index < artist.normalizedAliases.length; index++) {
+    const alias = artist.normalizedAliases[index];
+    const compactAlias = artist.compactAliases[index];
+
+    if (
+      searchText.normalized === alias ||
+      searchText.compact === compactAlias ||
+      searchText.normalized.includes(alias) ||
+      searchText.compact.includes(compactAlias)
+    ) {
+      return 1;
+    }
+
+    for (const phrase of searchText.phrases) {
+      const compactPhrase = phrase.replace(/\s+/g, "");
+      if (compactPhrase.length < Math.min(4, compactAlias.length)) {
+        continue;
+      }
+      best = Math.max(best, getSimilarity(compactPhrase, compactAlias));
+    }
+  }
+
+  return best >= 0.55 ? best : 0;
+}
+
+function filterSetsForDay(
+  sets: TimetableSet[],
+  preferredDay: 1 | 2 | null,
+): TimetableSet[] {
+  if (preferredDay === null) {
+    return sets;
+  }
+
+  return sets.filter((set) => set.day === preferredDay);
+}
+
+function rankSetCandidates(
+  region: RecognizedRegion,
+  preferredDay: 1 | 2 | null,
+  estimatedTimeHint: number | null,
+): RankedSetCandidate[] {
+  const stageHint = region.stageHint;
+  const preparedArtistText = prepareArtistSearchText(region.text, stageHint);
+  const timeHint = region.timeHint ?? estimatedTimeHint;
+  const hasParsedTime = region.timeHint !== null;
+  const timeWindow = hasParsedTime
+    ? TIME_HINT_WINDOW_MINUTES
+    : ESTIMATED_TIME_WINDOW_MINUTES;
+  const timeWeight = hasParsedTime ? 35 : estimatedTimeHint !== null ? 24 : 0;
+
+  return timetable
+    .map((set) => {
+      let score = 0;
+
+      if (preferredDay !== null) {
+        score += set.day === preferredDay ? 40 : -40;
+      }
+
+      if (stageHint) {
+        if (set.stageName === stageHint.stageName) {
+          score += 55 * stageHint.confidence;
+        } else if (stageHint.confidence >= 0.9) {
+          score -= 30;
+        }
+      }
+
+      if (timeHint !== null) {
+        const diff = Math.abs((setStartMinutes.get(set.id) ?? 0) - timeHint);
+        if (diff <= timeWindow) {
+          score += Math.max(0, timeWeight - diff * (hasParsedTime ? 1.75 : 1.1));
+        } else {
+          score -= hasParsedTime ? 18 : 10;
+        }
+
+        if (stageHint && set.stageName === stageHint.stageName && diff <= 8) {
+          score += 20;
+        }
+      }
+
+      const artistSimilarity = getArtistSimilarity(
+        preparedArtistText,
+        set.artistName,
+      );
+      score += artistSimilarity * 60;
+
+      if (artistSimilarity >= 0.92 && stageHint && set.stageName === stageHint.stageName) {
+        score += 15;
+      }
+
+      return { set, score };
+    })
+    .sort((left, right) => right.score - left.score);
+}
+
+function hasConfidentWinner(candidates: RankedSetCandidate[]): boolean {
+  const [top, second] = candidates;
+  if (!top || top.score < CONFIDENT_MATCH_SCORE) {
+    return false;
+  }
+
+  if (!second) {
+    return true;
+  }
+
+  return top.score - second.score >= CONFIDENT_MATCH_GAP || top.score >= 118;
+}
+
+function inferDayFromRegions(regions: RecognizedRegion[]): 1 | 2 | null {
+  const votes = new Map<1 | 2, number>([
+    [1, 0],
+    [2, 0],
+  ]);
+
+  for (const region of regions) {
+    const ranked = rankSetCandidates(region, null, null);
+    if (!hasConfidentWinner(ranked)) {
+      continue;
+    }
+
+    const top = ranked[0];
+    votes.set(top.set.day, (votes.get(top.set.day) ?? 0) + 1);
+  }
+
+  const day1Votes = votes.get(1) ?? 0;
+  const day2Votes = votes.get(2) ?? 0;
+
+  if (day1Votes === 0 && day2Votes === 0) {
+    return null;
+  }
+
+  if (day1Votes === day2Votes) {
+    return null;
+  }
+
+  return day1Votes > day2Votes ? 1 : 2;
+}
+
+function pickMatchedSets(
+  regions: RecognizedRegion[],
+  preferredDay: 1 | 2 | null,
+): TimetableSet[] {
+  const estimateTime = buildTimeEstimator(regions);
+  const matched = new Map<string, TimetableSet>();
+
+  for (const region of regions) {
+    const estimatedTime =
+      region.timeHint === null ? estimateTime?.(region.region.y) ?? null : null;
+    const ranked = rankSetCandidates(region, preferredDay, estimatedTime);
+
+    if (!hasConfidentWinner(ranked)) {
+      continue;
+    }
+
+    const top = ranked[0].set;
+    matched.set(top.id, top);
+  }
+
+  return Array.from(matched.values()).sort((left, right) => left.startAt - right.startAt);
+}
+
+function extractStructuredSetMatches(
+  regions: RecognizedRegion[],
+  preferredDay: 1 | 2 | null,
+): TimetableSet[] {
+  const matched = new Map<string, TimetableSet>();
+
+  for (const region of regions) {
+    const lines = region.text
+      .split("\n")
+      .map(sanitizeLine)
+      .filter(Boolean);
+
+    for (let index = 0; index < lines.length; index++) {
+      const timeHint = getTimeHint(lines[index]);
+      const stageHint = findStageHint(lines[index]);
+
+      if (timeHint === null || !stageHint) {
+        continue;
+      }
+
+      const contextText = lines.slice(index, index + 4).join("\n");
+      const ranked = rankSetCandidates(
+        {
+          text: contextText,
+          region: region.region,
+          timeHint,
+          stageHint,
+        },
+        preferredDay,
+        null,
+      );
+
+      if (!hasConfidentWinner(ranked)) {
+        continue;
+      }
+
+      matched.set(ranked[0].set.id, ranked[0].set);
+    }
+  }
+
+  return Array.from(matched.values()).sort((left, right) => left.startAt - right.startAt);
+}
+
+function extractRegionDirectMatches(
+  regions: RecognizedRegion[],
+  preferredDay: 1 | 2 | null,
+): MatchResult[] {
+  const matched = new Map<string, MatchResult>();
+  const estimateTime = buildTimeEstimator(regions);
+
+  for (const region of regions) {
+    const estimatedTime =
+      region.timeHint === null ? estimateTime?.(region.region.y) ?? null : null;
+    const ranked = rankSetCandidates(region, preferredDay, estimatedTime);
+
+    if (hasConfidentWinner(ranked)) {
+      continue;
+    }
+
+    const lineMatches = extractMatches(region.text);
+    if (lineMatches.length === 0) {
+      continue;
+    }
+
+    const candidateArtists = new Set(lineMatches.map((match) => match.artistName));
+    const candidateRanked = ranked.filter((item) =>
+      candidateArtists.has(item.set.artistName),
+    );
+
+    const top = candidateRanked[0];
+    const second = candidateRanked[1];
+    const hasClearWinner =
+      !!top &&
+      top.score >= DIRECT_REGION_MATCH_MIN_SCORE &&
+      (!second || top.score - second.score >= DIRECT_REGION_MATCH_GAP);
+
+    if (!hasClearWinner || !top) {
+      continue;
+    }
+
+    const rawLine =
+      lineMatches.find((match) => match.artistName === top.set.artistName)?.rawLine ??
+      region.text.replace(/\n+/g, " / ");
+
+    matched.set(top.set.artistName, {
+      artistName: top.set.artistName,
+      sets: filterSetsForDay(
+        timetable.filter((set) => set.artistName === top.set.artistName),
+        preferredDay,
+      ),
+      rawLine,
+    });
+  }
+
+  return Array.from(matched.values()).filter((match) => match.sets.length > 0);
+}
+
+export function detectDay(text: string): 1 | 2 | null {
+  const normalized = normalizeMatchText(text);
+
+  if (/(\bday\s*1\b|\b4\s*11\b|\bapr(?:il)?\s*11\b|\bsat\b)/.test(normalized)) {
+    return 1;
+  }
+
+  if (/(\bday\s*2\b|\b4\s*12\b|\bapr(?:il)?\s*12\b|\bsun\b)/.test(normalized)) {
+    return 2;
+  }
+
+  return null;
+}
+
 export function extractMatches(ocrText: string): MatchResult[] {
   const lines = ocrText
     .split("\n")
     .map(sanitizeLine)
-    .filter((l) => l.length >= 2);
+    .filter((line) => line.length >= 2);
 
   const matched = new Map<string, MatchResult>();
 
   for (const line of lines) {
-    const lower = line.toLowerCase();
-    if (lower.length === 0) continue;
-
-    let artist: string | null = null;
-
-    const exactIndex = artistNamesLower.indexOf(lower);
-    if (exactIndex >= 0) {
-      artist = artistNames[exactIndex];
+    const normalizedLine = normalizeMatchText(line);
+    if (!normalizedLine) {
+      continue;
     }
 
-    if (!artist) {
-      for (let i = 0; i < artistNames.length; i++) {
-        const name = artistNames[i];
-        const nameLower = artistNamesLower[i];
-        if (lower.includes(nameLower) || nameLower.includes(lower)) {
-          artist = name;
-          break;
+    const compactLine = normalizedLine.replace(/\s+/g, "");
+    const looksLikeMetadata =
+      /^\d{1,2}[:.]\d{2}/.test(line) ||
+      /^[A-Z\s]+$/.test(line) ||
+      compactLine.length <= 2;
+
+    const preparedSearchText = prepareArtistSearchText(line, findStageHint(line));
+    const rankedArtists = artistCandidates
+      .map((candidate) => ({
+        candidate,
+        score: getArtistSimilarity(preparedSearchText, candidate.name),
+      }))
+      .filter((item) => item.score >= (looksLikeMetadata ? 0.96 : 0.82))
+      .sort((left, right) => {
+        if (right.score !== left.score) {
+          return right.score - left.score;
         }
-      }
-    }
 
-    const looksLikeMetadata = /^\d{1,2}[:.]\d{2}/.test(line) || /^[A-Z\s]+$/.test(line);
-    if (!artist && !looksLikeMetadata && lower.length >= 3) {
-      const best = findBestMatch(lower, artistNames, 0.35);
-      if (best) {
-        artist = best.candidate;
-      }
-    }
+        return right.candidate.compact.length - left.candidate.compact.length;
+      });
 
-    if (artist && !matched.has(artist)) {
-      const sets = timetable.filter((t) => t.artistName === artist);
+    const top = rankedArtists[0];
+    const second = rankedArtists[1];
+    const hasClearWinner =
+      !!top &&
+      (!second || top.score - second.score >= 0.08 || top.score >= 0.96);
+
+    if (hasClearWinner && top && !matched.has(top.candidate.name)) {
+      const sets = timetable.filter((set) => set.artistName === top.candidate.name);
       if (sets.length > 0) {
-        matched.set(artist, { artistName: artist, sets, rawLine: line });
+        matched.set(top.candidate.name, {
+          artistName: top.candidate.name,
+          sets,
+          rawLine: line,
+        });
       }
     }
   }
@@ -84,88 +699,666 @@ export function extractMatches(ocrText: string): MatchResult[] {
   return Array.from(matched.values());
 }
 
-export function preprocessImage(imageUrl: string, scale = 2): Promise<string> {
-  return new Promise((resolve) => {
-    if (typeof document === "undefined") {
-      resolve(imageUrl);
-      return;
-    }
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth * scale;
-      canvas.height = img.naturalHeight * scale;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        resolve(imageUrl);
-        return;
-      }
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      const contrast = 1.4;
-      const brightness = 10;
-      for (let i = 0; i < data.length; i += 4) {
-        data[i] = Math.min(255, Math.max(0, (data[i] - 128) * contrast + 128 + brightness));
-        data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * contrast + 128 + brightness));
-        data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * contrast + 128 + brightness));
-      }
-      ctx.putImageData(imageData, 0, 0);
-
-      resolve(canvas.toDataURL("image/png"));
-    };
-    img.onerror = () => resolve(imageUrl);
-    img.src = imageUrl;
+function loadImageElement(imageUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Image load failed"));
+    image.src = imageUrl;
   });
 }
 
-async function createOCRWorker(
-  onProgress?: (progress: number) => void
-): Promise<Worker> {
-  try {
-    return await createWorker("jpn+eng", undefined, {
-      logger: (m) => {
-        if (m.status === "recognizing text" && typeof m.progress === "number") {
-          onProgress?.(m.progress);
+function createCanvas(width: number, height: number): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(width));
+  canvas.height = Math.max(1, Math.round(height));
+  return canvas;
+}
+
+function buildRegionMask(
+  image: HTMLImageElement,
+  region: Rect,
+  profile: { minSaturation: number; minLuma: number; minChannel: number },
+): { mask: Uint8Array; width: number; height: number } | null {
+  const maxSampleSide = 280;
+  const scale = Math.min(
+    1,
+    maxSampleSide / Math.max(region.width, region.height),
+  );
+  const sampleWidth = Math.max(1, Math.round(region.width * scale));
+  const sampleHeight = Math.max(1, Math.round(region.height * scale));
+  const canvas = createCanvas(sampleWidth, sampleHeight);
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return null;
+  }
+
+  context.drawImage(
+    image,
+    region.x,
+    region.y,
+    region.width,
+    region.height,
+    0,
+    0,
+    sampleWidth,
+    sampleHeight,
+  );
+
+  const { data } = context.getImageData(0, 0, sampleWidth, sampleHeight);
+  const mask = new Uint8Array(sampleWidth * sampleHeight);
+
+  for (let y = 0; y < sampleHeight; y++) {
+    for (let x = 0; x < sampleWidth; x++) {
+      const offset = (y * sampleWidth + x) * 4;
+      const r = data[offset];
+      const g = data[offset + 1];
+      const b = data[offset + 2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      const saturation = max === 0 ? 0 : (max - min) / max;
+
+      if (
+        saturation > profile.minSaturation &&
+        luma > profile.minLuma &&
+        max > profile.minChannel
+      ) {
+        mask[y * sampleWidth + x] = 1;
+      }
+    }
+  }
+
+  return { mask, width: sampleWidth, height: sampleHeight };
+}
+
+function findBestGap(
+  mask: Uint8Array,
+  width: number,
+  height: number,
+  axis: "x" | "y",
+): { start: number; end: number } | null {
+  const length = axis === "x" ? width : height;
+  const otherLength = axis === "x" ? height : width;
+  const edgePadding = Math.max(2, Math.round(length * 0.12));
+  const minGapLength = Math.max(2, Math.round(length * 0.025));
+  const maxDensity = 0.035;
+
+  let best: { start: number; end: number } | null = null;
+  let currentStart = -1;
+
+  for (let index = 0; index < length; index++) {
+    let count = 0;
+
+    if (axis === "x") {
+      for (let y = 0; y < height; y++) {
+        count += mask[y * width + index];
+      }
+    } else {
+      for (let x = 0; x < width; x++) {
+        count += mask[index * width + x];
+      }
+    }
+
+    const density = count / otherLength;
+    const isGap =
+      density <= maxDensity &&
+      index >= edgePadding &&
+      index <= length - edgePadding;
+
+    if (isGap && currentStart === -1) {
+      currentStart = index;
+    } else if (!isGap && currentStart !== -1) {
+      if (index - currentStart >= minGapLength) {
+        if (!best || index - currentStart > best.end - best.start) {
+          best = { start: currentStart, end: index - 1 };
         }
-      },
+      }
+      currentStart = -1;
+    }
+  }
+
+  if (currentStart !== -1 && length - currentStart >= minGapLength) {
+    const candidate = { start: currentStart, end: length - 1 };
+    if (!best || candidate.end - candidate.start > best.end - best.start) {
+      best = candidate;
+    }
+  }
+
+  return best;
+}
+
+function splitRegionByGaps(
+  image: HTMLImageElement,
+  region: Rect,
+  profile: { minSaturation: number; minLuma: number; minChannel: number },
+  depth = 0,
+): Rect[] {
+  if (depth >= 4 || region.width < 120 || region.height < 120) {
+    return [region];
+  }
+
+  const regionMask = buildRegionMask(image, region, profile);
+  if (!regionMask) {
+    return [region];
+  }
+
+  const verticalGap = findBestGap(
+    regionMask.mask,
+    regionMask.width,
+    regionMask.height,
+    "x",
+  );
+  const horizontalGap = findBestGap(
+    regionMask.mask,
+    regionMask.width,
+    regionMask.height,
+    "y",
+  );
+
+  const verticalGapSize = verticalGap ? verticalGap.end - verticalGap.start + 1 : 0;
+  const horizontalGapSize = horizontalGap
+    ? horizontalGap.end - horizontalGap.start + 1
+    : 0;
+
+  let splitAxis: "x" | "y" | null = null;
+  if (
+    horizontalGap &&
+    (!verticalGap ||
+      horizontalGapSize / regionMask.height >= verticalGapSize / regionMask.width)
+  ) {
+    splitAxis = "y";
+  } else if (verticalGap) {
+    splitAxis = "x";
+  }
+
+  if (!splitAxis) {
+    return [region];
+  }
+
+  if (splitAxis === "x") {
+    const gap = verticalGap!;
+    const splitX =
+      region.x +
+      Math.round((((gap.start + gap.end) / 2) * region.width) / regionMask.width);
+    const leftWidth = splitX - region.x;
+    const rightWidth = region.x + region.width - splitX;
+
+    if (leftWidth < 60 || rightWidth < 60) {
+      return [region];
+    }
+
+    return [
+      ...splitRegionByGaps(
+        image,
+        { x: region.x, y: region.y, width: leftWidth, height: region.height },
+        profile,
+        depth + 1,
+      ),
+      ...splitRegionByGaps(
+        image,
+        { x: splitX, y: region.y, width: rightWidth, height: region.height },
+        profile,
+        depth + 1,
+      ),
+    ];
+  }
+
+  const gap = horizontalGap!;
+  const splitY =
+    region.y +
+    Math.round((((gap.start + gap.end) / 2) * region.height) / regionMask.height);
+  const topHeight = splitY - region.y;
+  const bottomHeight = region.y + region.height - splitY;
+
+  if (topHeight < 60 || bottomHeight < 60) {
+    return [region];
+  }
+
+  return [
+    ...splitRegionByGaps(
+      image,
+      { x: region.x, y: region.y, width: region.width, height: topHeight },
+      profile,
+      depth + 1,
+    ),
+    ...splitRegionByGaps(
+      image,
+      { x: region.x, y: splitY, width: region.width, height: bottomHeight },
+      profile,
+      depth + 1,
+    ),
+  ];
+}
+
+function overlapsOrTouches(left: Rect, right: Rect, gap = 0): boolean {
+  return !(
+    left.x + left.width + gap < right.x ||
+    right.x + right.width + gap < left.x ||
+    left.y + left.height + gap < right.y ||
+    right.y + right.height + gap < left.y
+  );
+}
+
+function getOverlapArea(left: Rect, right: Rect): number {
+  const overlapWidth =
+    Math.min(left.x + left.width, right.x + right.width) -
+    Math.max(left.x, right.x);
+  const overlapHeight =
+    Math.min(left.y + left.height, right.y + right.height) -
+    Math.max(left.y, right.y);
+
+  if (overlapWidth <= 0 || overlapHeight <= 0) {
+    return 0;
+  }
+
+  return overlapWidth * overlapHeight;
+}
+
+function mergeNearbyRegions(regions: Rect[], gap = 0): Rect[] {
+  const merged: Rect[] = [];
+
+  for (const region of regions) {
+    const target = merged.find((item) => {
+      if (!overlapsOrTouches(item, region, gap)) {
+        return false;
+      }
+
+      const overlapArea = getOverlapArea(item, region);
+      if (overlapArea === 0) {
+        return false;
+      }
+
+      const smallerArea = Math.min(
+        item.width * item.height,
+        region.width * region.height,
+      );
+
+      return overlapArea / smallerArea >= REGION_MERGE_OVERLAP_RATIO;
     });
-  } catch {
-    return await createWorker("eng", undefined, {
-      logger: (m) => {
-        if (m.status === "recognizing text" && typeof m.progress === "number") {
-          onProgress?.(m.progress);
+
+    if (!target) {
+      merged.push({ ...region });
+      continue;
+    }
+
+    const right = Math.max(target.x + target.width, region.x + region.width);
+    const bottom = Math.max(target.y + target.height, region.y + region.height);
+    target.x = Math.min(target.x, region.x);
+    target.y = Math.min(target.y, region.y);
+    target.width = right - target.x;
+    target.height = bottom - target.y;
+  }
+
+  return merged.sort((left, right) =>
+    left.y === right.y ? left.x - right.x : left.y - right.y,
+  );
+}
+
+function detectRegionsWithProfile(
+  image: HTMLImageElement,
+  profile: { minSaturation: number; minLuma: number; minChannel: number },
+): Rect[] {
+  const sampleWidth = Math.min(320, image.naturalWidth);
+  const sampleHeight = Math.max(
+    1,
+    Math.round((image.naturalHeight / image.naturalWidth) * sampleWidth),
+  );
+  const canvas = createCanvas(sampleWidth, sampleHeight);
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return [];
+  }
+
+  context.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+  const { data } = context.getImageData(0, 0, sampleWidth, sampleHeight);
+  const mask = new Uint8Array(sampleWidth * sampleHeight);
+  const visited = new Uint8Array(sampleWidth * sampleHeight);
+  const headerCutoff = Math.floor(sampleHeight * 0.12);
+  const regions: Rect[] = [];
+  const neighbors = [
+    [-1, -1],
+    [0, -1],
+    [1, -1],
+    [-1, 0],
+    [1, 0],
+    [-1, 1],
+    [0, 1],
+    [1, 1],
+  ];
+
+  for (let y = 0; y < sampleHeight; y++) {
+    for (let x = 0; x < sampleWidth; x++) {
+      if (y < headerCutoff) {
+        continue;
+      }
+
+      const offset = (y * sampleWidth + x) * 4;
+      const r = data[offset];
+      const g = data[offset + 1];
+      const b = data[offset + 2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      const saturation = max === 0 ? 0 : (max - min) / max;
+
+      if (
+        saturation > profile.minSaturation &&
+        luma > profile.minLuma &&
+        max > profile.minChannel
+      ) {
+        mask[y * sampleWidth + x] = 1;
+      }
+    }
+  }
+
+  for (let index = 0; index < mask.length; index++) {
+    if (!mask[index] || visited[index]) {
+      continue;
+    }
+
+    const queue = [index];
+    visited[index] = 1;
+
+    let minX = sampleWidth;
+    let minY = sampleHeight;
+    let maxX = 0;
+    let maxY = 0;
+    let area = 0;
+
+    while (queue.length > 0) {
+      const current = queue.pop()!;
+      const x = current % sampleWidth;
+      const y = Math.floor(current / sampleWidth);
+
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+      area++;
+
+      for (const [dx, dy] of neighbors) {
+        const nextX = x + dx;
+        const nextY = y + dy;
+        if (
+          nextX < 0 ||
+          nextX >= sampleWidth ||
+          nextY < 0 ||
+          nextY >= sampleHeight
+        ) {
+          continue;
         }
-      },
+
+        const nextIndex = nextY * sampleWidth + nextX;
+        if (!mask[nextIndex] || visited[nextIndex]) {
+          continue;
+        }
+
+        visited[nextIndex] = 1;
+        queue.push(nextIndex);
+      }
+    }
+
+    const width = maxX - minX + 1;
+    const height = maxY - minY + 1;
+    if (area < 40 || width < 12 || height < 8) {
+      continue;
+    }
+
+    const scaleX = image.naturalWidth / sampleWidth;
+    const scaleY = image.naturalHeight / sampleHeight;
+    const x = Math.max(0, Math.floor(minX * scaleX) - REGION_PADDING);
+    const y = Math.max(0, Math.floor(minY * scaleY) - REGION_PADDING);
+    const regionWidth = Math.min(
+      image.naturalWidth - x,
+      Math.ceil(width * scaleX) + REGION_PADDING * 2,
+    );
+    const regionHeight = Math.min(
+      image.naturalHeight - y,
+      Math.ceil(height * scaleY) + REGION_PADDING * 2,
+    );
+
+    const rawRegion = { x, y, width: regionWidth, height: regionHeight };
+    regions.push(...splitRegionByGaps(image, rawRegion, profile));
+  }
+
+  return mergeNearbyRegions(regions, 0).slice(0, MAX_REGION_COUNT);
+}
+
+function detectSetRegions(image: HTMLImageElement): Rect[] {
+  let fallback: Rect[] = [];
+
+  for (const profile of REGION_PROFILES) {
+    const regions = detectRegionsWithProfile(image, profile);
+    if (regions.length >= MIN_REGION_COUNT && regions.length <= MAX_REGION_COUNT) {
+      return regions;
+    }
+
+    if (regions.length > fallback.length) {
+      fallback = regions;
+    }
+  }
+
+  return fallback;
+}
+
+function preprocessCrop(
+  image: HTMLImageElement,
+  region: Rect,
+  targetWidth = REGION_TARGET_WIDTH,
+): string {
+  const scale = targetWidth / region.width;
+  const canvas = createCanvas(targetWidth, region.height * scale);
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return image.src;
+  }
+
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(
+    image,
+    region.x,
+    region.y,
+    region.width,
+    region.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  );
+
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const { data } = imageData;
+
+  for (let index = 0; index < data.length; index += 4) {
+    data[index] = Math.min(255, Math.max(0, (data[index] - 128) * 1.14 + 134));
+    data[index + 1] = Math.min(
+      255,
+      Math.max(0, (data[index + 1] - 128) * 1.14 + 134),
+    );
+    data[index + 2] = Math.min(
+      255,
+      Math.max(0, (data[index + 2] - 128) * 1.14 + 134),
+    );
+  }
+
+  context.putImageData(imageData, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
+async function createOCRWorker(
+  progressState: OCRProgressState,
+  onProgress?: (progress: number) => void,
+): Promise<Worker> {
+  const logger = (message: { status: string; progress?: number }) => {
+    if (
+      message.status === "recognizing text" &&
+      typeof message.progress === "number"
+    ) {
+      const progress =
+        (progressState.completedJobs + message.progress) / progressState.totalJobs;
+      onProgress?.(Math.min(0.99, progress));
+    }
+  };
+
+  return createWorker("eng", undefined, { logger });
+}
+
+async function recognizeRegions(
+  worker: Worker,
+  image: HTMLImageElement,
+  regions: Rect[],
+  progressState: OCRProgressState,
+  onProgress?: (progress: number) => void,
+): Promise<RecognizedRegion[]> {
+  const recognized: RecognizedRegion[] = [];
+
+  for (const region of regions) {
+    const dataUrl = preprocessCrop(image, region);
+    const {
+      data: { text },
+    } = await worker.recognize(dataUrl);
+    progressState.completedJobs += 1;
+    onProgress?.(Math.min(1, progressState.completedJobs / progressState.totalJobs));
+
+    const sanitizedText = sanitizeBlockText(text);
+    if (!sanitizedText) {
+      continue;
+    }
+
+    recognized.push({
+      text: sanitizedText,
+      region,
+      timeHint: getTimeHint(sanitizedText),
+      stageHint: findStageHint(sanitizedText),
     });
   }
+
+  return recognized;
+}
+
+function buildMatchResults(
+  matchedSets: TimetableSet[],
+  regions: RecognizedRegion[],
+  directMatches: MatchResult[] = [],
+): MatchResult[] {
+  const rawLineByArtist = new Map<string, string>();
+
+  for (const region of regions) {
+    const ranked = rankSetCandidates(region, null, null);
+    if (!hasConfidentWinner(ranked)) {
+      continue;
+    }
+
+    const artistName = ranked[0].set.artistName;
+    if (!rawLineByArtist.has(artistName)) {
+      rawLineByArtist.set(artistName, region.text.replace(/\n+/g, " / "));
+    }
+  }
+
+  for (const match of directMatches) {
+    if (!rawLineByArtist.has(match.artistName)) {
+      rawLineByArtist.set(match.artistName, match.rawLine);
+    }
+  }
+
+  return Array.from(
+    matchedSets.reduce<Map<string, MatchResult>>((map, set) => {
+      const existing = map.get(set.artistName);
+      if (existing) {
+        existing.sets.push(set);
+        return map;
+      }
+
+      map.set(set.artistName, {
+        artistName: set.artistName,
+        sets: [set],
+        rawLine: rawLineByArtist.get(set.artistName) ?? set.artistName,
+      });
+      return map;
+    }, new Map()).values(),
+  ).sort((left, right) => left.sets[0].startAt - right.sets[0].startAt);
 }
 
 export async function runOCR(
   imageUrl: string,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<OCRResult> {
-  const processedUrl = await preprocessImage(imageUrl, 2);
+  if (typeof document === "undefined") {
+    return { text: "", day: null, matches: [] };
+  }
 
-  const worker = await createOCRWorker(onProgress);
+  onProgress?.(0.02);
+  const image = await loadImageElement(imageUrl);
+  const regions = detectSetRegions(image);
+
+  if (regions.length === 0) {
+    return { text: "", day: null, matches: [] };
+  }
+
+  const progressState: OCRProgressState = {
+    completedJobs: 0,
+    totalJobs: regions.length,
+  };
+  const worker = await createOCRWorker(progressState, onProgress);
 
   await worker.setParameters({
     tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+    preserve_interword_spaces: "1",
   });
 
   try {
-    const {
-      data: { text },
-    } = await worker.recognize(processedUrl);
+    const recognizedRegions = await recognizeRegions(
+      worker,
+      image,
+      regions,
+      progressState,
+      onProgress,
+    );
 
-    const day = detectDay(text);
-    const matches = extractMatches(text);
+    const combinedText = recognizedRegions.map((region) => region.text).join("\n\n");
+    const inferredDay = detectDay(combinedText) ?? inferDayFromRegions(recognizedRegions);
+    const directMatches = extractRegionDirectMatches(
+      recognizedRegions,
+      inferredDay,
+    );
+    const preliminaryMatchedSets = Array.from(
+      new Map(
+        [
+          ...pickMatchedSets(recognizedRegions, inferredDay),
+          ...extractStructuredSetMatches(recognizedRegions, inferredDay),
+          ...directMatches.flatMap((match) => filterSetsForDay(match.sets, inferredDay)),
+        ].map((set) => [set.id, set]),
+      ).values(),
+    ).sort((left, right) => left.startAt - right.startAt);
+    const dayFromMatches =
+      inferredDay ??
+      (() => {
+        const day1Count = preliminaryMatchedSets.filter((set) => set.day === 1).length;
+        const day2Count = preliminaryMatchedSets.filter((set) => set.day === 2).length;
+        if (day1Count === day2Count) {
+          return null;
+        }
+        return day1Count > day2Count ? 1 : 2;
+      })();
+    const matchedSets = filterSetsForDay(preliminaryMatchedSets, dayFromMatches);
+    const filteredDirectMatches = directMatches
+      .map((match) => ({
+        ...match,
+        sets: filterSetsForDay(match.sets, dayFromMatches),
+      }))
+      .filter((match) => match.sets.length > 0);
 
-    return { text, day, matches };
+    return {
+      text: combinedText,
+      day: dayFromMatches,
+      matches: buildMatchResults(matchedSets, recognizedRegions, filteredDirectMatches),
+    };
   } finally {
     await worker.terminate();
   }

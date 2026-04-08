@@ -1,6 +1,6 @@
-import ja from "./ja.json";
-import zh from "./zh.json";
-import en from "./en.json";
+import ja from "./ja";
+import zh from "./zh";
+import en from "./en";
 
 export const resources = {
   ja: { common: ja },

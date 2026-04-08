@@ -5,9 +5,7 @@ const en = {
   },
   nav: {
     home: "Home",
-    timetable: "Timetable",
-    map: "Map",
-    plan: "Plan",
+    browse: "Browse",
   },
   home: {
     subtitle: "SYNCHRONICITY'26",

@@ -96,9 +96,10 @@ export function LocaleSwitcher() {
       {/* Mobile sheet */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger>
-          <div className="fixed right-3 top-3 z-50 flex h-8 cursor-pointer items-center gap-1 rounded-full border border-zinc-700 bg-[#0a0a0a]/80 px-3 text-xs font-medium text-zinc-300 backdrop-blur transition-colors hover:bg-zinc-800 md:hidden">
-            <Languages className="h-3.5 w-3.5" />
-            <span className="uppercase">{locale}</span>
+          <div className="flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-100 md:hidden">
+            <Languages className="h-4 w-4" />
+            <span>{t("localeSwitcher.label")}</span>
+            <span className="text-xs text-zinc-500">{options.find((opt) => opt.value === locale)?.label}</span>
           </div>
         </SheetTrigger>
         <SheetContent

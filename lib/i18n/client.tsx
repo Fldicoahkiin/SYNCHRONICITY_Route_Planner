@@ -19,7 +19,7 @@ export function initI18nClient(lng: Locale) {
     defaultNS: "common",
     ns: ["common"],
     resources,
-    interpolation: { escapeValue: false },
+    interpolation: { escapeValue: false, prefix: "{{", suffix: "}}" },
     react: { useSuspense: false },
   });
   return instance;

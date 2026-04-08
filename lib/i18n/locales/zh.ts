@@ -5,9 +5,7 @@ const zh = {
   },
   nav: {
     home: "首页",
-    timetable: "时间表",
-    map: "地图",
-    plan: "行程",
+    browse: "浏览",
   },
   home: {
     subtitle: "SYNCHRONICITY'26",

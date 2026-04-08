@@ -5,9 +5,7 @@ const ja = {
   },
   nav: {
     home: "ホーム",
-    timetable: "タイムテーブル",
-    map: "マップ",
-    plan: "プラン",
+    browse: "浏览",
   },
   home: {
     subtitle: "SYNCHRONICITY'26",
