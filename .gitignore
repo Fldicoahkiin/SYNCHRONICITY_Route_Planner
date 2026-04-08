@@ -42,3 +42,6 @@ next-env.d.ts
 
 # tesseract.js runtime downloads
 *.traineddata
+
+# local AI tool state
+.claude/settings.local.json
