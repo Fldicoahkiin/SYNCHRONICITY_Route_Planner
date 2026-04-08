@@ -14,13 +14,11 @@ import { timetable } from "@/lib/data/timetable";
 import { calculateScore } from "@/lib/utils/scoring";
 import { formatTime } from "@/lib/utils/route-planner";
 import { buildAppleMapsRouteUrl, buildGoogleMapsRouteUrl } from "@/lib/utils/map-urls";
-import { downloadIcal } from "@/lib/utils/ical";
 import { getRouteExportStops } from "@/lib/utils/routing";
 import { RoutePlannerPanel } from "@/components/route-planner-panel";
 import { RouteExportSheet } from "@/components/route-export-sheet";
 import type { Locale } from "@/lib/i18n/settings";
 import {
-  CalendarPlus,
   Check,
   Copy,
   Download,
@@ -137,20 +135,7 @@ export default function PlanPage() {
     }
   };
 
-  const exportToCalendar = () => {
-    const sets = route.legs.map((leg) => leg.set);
 
-    if (sets.length === 0) {
-      return;
-    }
-
-    downloadIcal(
-      sets,
-      `synchronicity26-plan-day${day}.ics`,
-      `SYNCHRONICITY'26 ${dayLabel}`,
-      `${t("plan.title")} - ${dayLabel}`,
-    );
-  };
 
   const exportPng = async () => {
     if (!exportSheetRef.current || route.totalSets === 0) {
@@ -231,9 +216,6 @@ export default function PlanPage() {
                         {t("plan.share")}
                       </ActionButton>
                     ) : null}
-                    <ActionButton onClick={exportToCalendar} icon={<CalendarPlus className="h-3.5 w-3.5" />}>
-                      {t("plan.exportCalendar")}
-                    </ActionButton>
                     <ActionButton onClick={copyPlan} icon={copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}>
                       {copied ? t("plan.copied") : t("plan.copyPlan")}
                     </ActionButton>

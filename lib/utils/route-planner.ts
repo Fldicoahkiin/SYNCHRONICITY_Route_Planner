@@ -109,16 +109,33 @@ export function planRoute(
     }
   }
 
-  const conflictGroups = rawConflictGroups.map((group) => ({
-    ...group,
-    selectedPerformanceIds: getNormalizedSelection(group, conflictSelections[group.id]),
-    optionPreviews: buildConflictOptionPreviews(
+  const conflictGroups = rawConflictGroups.map((group) => {
+    const optionPreviews = buildConflictOptionPreviews(
       group,
       sets,
       groupIdByPerformance,
       travelOverrides,
-    ),
-  }));
+    );
+
+    // Order performances in the group by shortest transfer time from previous scheduled set
+    const walkMap = new Map(optionPreviews.map((p) => [p.performanceId, p.before.kind === "resolved" ? p.before.walkMinutes ?? Infinity : Infinity]));
+
+    const sortedPerformances = [...group.performances].sort((a, b) => {
+      const aw = walkMap.get(a.id) ?? Infinity;
+      const bw = walkMap.get(b.id) ?? Infinity;
+      if (aw !== bw) return aw - bw;
+      return compareSets(a, b);
+    });
+
+    const normalizedSelection = getNormalizedSelection({ ...group, performances: sortedPerformances }, conflictSelections[group.id]);
+
+    return {
+      ...group,
+      performances: sortedPerformances,
+      selectedPerformanceIds: normalizedSelection,
+      optionPreviews,
+    };
+  });
 
   const groupedPerformanceIds = new Set(groupIdByPerformance.keys());
   const nonConflictSets = sets.filter((set) => !groupedPerformanceIds.has(set.id));
