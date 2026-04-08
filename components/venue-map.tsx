@@ -203,7 +203,7 @@ export default function VenueMap({
         );
       })}
 
-      {routeSegments.map((segment) => (
+      {routeSegments.map((segment) => segment && (
         <Polyline
           key={segment.key}
           positions={segment.positions}
@@ -223,7 +223,7 @@ export default function VenueMap({
         />
       ))}
 
-      {routeSegments.map((segment) => (
+      {routeSegments.map((segment) => segment && (
         <Marker
           key={`walk-${segment.key}`}
           position={segment.midPoint}

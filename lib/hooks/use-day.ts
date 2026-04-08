@@ -1,7 +1,5 @@
-import useLocalStorageState from "use-local-storage-state";
+import { usePersistentState } from "./use-persistent-state";
 
 export function useDay() {
-  return useLocalStorageState<"1" | "2">("synchronicity-day", {
-    defaultValue: "1",
-  });
+  return usePersistentState<"1" | "2">("synchronicity-day", "1");
 }

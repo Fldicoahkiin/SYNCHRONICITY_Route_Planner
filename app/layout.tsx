@@ -20,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html className="h-full antialiased dark">
-      <body className="min-h-full bg-[#0a0a0a] text-zinc-100">{children}</body>
+      <body className="min-h-full bg-[#0a0a0a] text-zinc-100">
+        {children}
+      </body>
     </html>
   );
 }

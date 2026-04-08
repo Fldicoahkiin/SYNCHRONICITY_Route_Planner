@@ -1,11 +1,24 @@
 import { getWalkMinutes } from "@/lib/data/walking-matrix";
 import type { TimetableSet } from "@/lib/data/timetable";
 
+export type TravelSource = "same-venue" | "route-api" | "matrix";
+
+export interface RouteTravelOverride {
+  minutes: number;
+  distanceMeters?: number;
+  geometry?: [number, number][];
+  source: TravelSource;
+}
+
 export interface RouteLeg {
   set: TimetableSet;
   nextSet?: TimetableSet;
   walkMinutes: number;
+  gapMinutes: number;
   bufferMinutes: number; // time remaining after arriving at next venue
+  distanceMeters?: number;
+  geometry?: [number, number][];
+  travelSource: TravelSource;
   status: "comfortable" | "just-right" | "tight" | "impossible";
 }
 
@@ -17,9 +30,14 @@ export interface PlannedRoute {
   averageBuffer: number;
 }
 
+export function getRouteLegKey(currentSetId: string, nextSetId: string): string {
+  return `${currentSetId}->${nextSetId}`;
+}
+
 export function planRoute(
   favorites: TimetableSet[],
   day: 1 | 2,
+  travelOverrides: Record<string, RouteTravelOverride> = {},
 ): PlannedRoute {
   const sets = favorites
     .filter((s) => s.day === day)
@@ -37,18 +55,29 @@ export function planRoute(
       legs.push({
         set: current,
         walkMinutes: 0,
+        gapMinutes: 0,
         bufferMinutes: Infinity,
+        travelSource: "same-venue",
         status: "comfortable",
       });
       continue;
     }
 
-    const walk = current.venueId && next.venueId
-      ? getWalkMinutes(current.venueId, next.venueId)
-      : 10;
+    const legKey = getRouteLegKey(current.id, next.id);
+    const override = travelOverrides[legKey];
+    const sameVenue =
+      current.venueId &&
+      next.venueId &&
+      current.venueId === next.venueId;
+    const walk = sameVenue
+      ? 0
+      : override?.minutes ??
+        (current.venueId && next.venueId
+          ? getWalkMinutes(current.venueId, next.venueId)
+          : 10);
 
-    const buffer = next.startAt - current.finishAt - walk * 60;
-    const bufferMinutes = Math.round(buffer / 60);
+    const gapMinutes = Math.round((next.startAt - current.finishAt) / 60);
+    const bufferMinutes = gapMinutes - walk;
 
     let status: RouteLeg["status"] = "comfortable";
     if (bufferMinutes < 0) {
@@ -68,7 +97,11 @@ export function planRoute(
       set: current,
       nextSet: next,
       walkMinutes: walk,
+      gapMinutes,
       bufferMinutes,
+      distanceMeters: override?.distanceMeters,
+      geometry: override?.geometry,
+      travelSource: sameVenue ? "same-venue" : override?.source ?? "matrix",
       status,
     });
   }

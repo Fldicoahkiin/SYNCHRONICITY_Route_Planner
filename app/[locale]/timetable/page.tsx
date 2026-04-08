@@ -1,340 +1,260 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Button, Input, Modal } from "@heroui/react";
 import { Heart, MapPin, Search, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import useLocalStorageState from "use-local-storage-state";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Toggle } from "@/components/ui/toggle";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { usePersistentState } from "@/lib/hooks/use-persistent-state";
 import { timetable, type TimetableSet } from "@/lib/data/timetable";
-import { venues, venueMap } from "@/lib/data/venues";
-import { cn } from "@/lib/utils";
+import { venueMap } from "@/lib/data/venues";
 import { formatTime } from "@/lib/utils/route-planner";
 import { ImportFromImageButton } from "@/components/import-from-image";
+import { TimetableBoard } from "@/components/timetable-board";
 
 export default function TimetablePage() {
   const { t } = useTranslation();
   const [day, setDay] = useDay();
-  const [favorites, setFavorites] = useLocalStorageState<Record<string, boolean>>("synchronicity-favorites", {
-    defaultValue: {},
-  });
+  const [favorites, setFavorites] = usePersistentState<Record<string, boolean>>(
+    "synchronicity-favorites",
+    {},
+  );
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedSet, setSelectedSet] = useState<TimetableSet | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   const dayNum = day === "1" ? 1 : 2;
-
-  const rows = useMemo(() => {
-    const sets = timetable.filter((t) => t.day === dayNum);
-    const venueOrder = venues.map((v) => v.id);
-    const grouped: Record<string, TimetableSet[]> = {};
-    venueOrder.forEach((v) => (grouped[v] = []));
-    sets.forEach((s) => {
-      if (s.venueId && grouped[s.venueId]) {
-        grouped[s.venueId].push(s);
-      }
-    });
+  const daySets = useMemo(
+    () => timetable.filter((set) => set.day === dayNum),
+    [dayNum],
+  );
+  const visibleSets = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return venueOrder
-      .map((venueId) => ({
-        venueId,
-        venue: venueMap.get(venueId)!,
-        sets: grouped[venueId]
-          .filter((s) => {
-            if (showFavoritesOnly && !favorites[s.id]) return false;
-            if (normalizedQuery) {
-              return (
-                s.artistName.toLowerCase().includes(normalizedQuery) ||
-                s.stageName.toLowerCase().includes(normalizedQuery)
-              );
-            }
-            return true;
-          })
-          .sort((a, b) => a.startAt - b.startAt),
-      }))
-      .filter((r) => r.sets.length > 0);
-  }, [dayNum, query, showFavoritesOnly, favorites]);
+
+    return daySets.filter((set) => {
+      if (showFavoritesOnly && !favorites[set.id]) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      return (
+        set.artistName.toLowerCase().includes(normalizedQuery) ||
+        set.stageName.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [daySets, favorites, query, showFavoritesOnly]);
+
+  const favoriteIds = useMemo(
+    () => new Set(Object.entries(favorites).filter(([, value]) => value).map(([id]) => id)),
+    [favorites],
+  );
 
   const toggleFavorite = (id: string) => {
     setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const hasAnyFavorites = Object.values(favorites).some(Boolean);
-  const clearAllFavorites = () => {
-    if (typeof window !== "undefined" && window.confirm(t("timetable.clearConfirm"))) {
-      setFavorites({});
-    }
-  };
-
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-40 border-b border-zinc-800 bg-[#0a0a0a]/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[#0a0a0a]/80">
-        <div className="mx-auto flex max-w-md items-center justify-between md:max-w-5xl">
-          <h1 className="text-lg font-semibold tracking-tight">{t("timetable.title")}</h1>
-          <div className="flex items-center gap-2">
-            {hasAnyFavorites && (
-              <button
-                onClick={clearAllFavorites}
-                className="text-xs text-zinc-500 transition-colors hover:text-zinc-300"
-              >
-                {t("timetable.clearFavorites")}
-              </button>
-            )}
-            <ImportFromImageButton
-              onImportAction={(ids) => {
-                setFavorites((prev) => {
-                  const next = { ...prev };
-                  ids.forEach((id) => (next[id] = true));
-                  return next;
-                });
-              }}
-            />
-            <Toggle
-              pressed={showFavoritesOnly}
-              onPressedChange={setShowFavoritesOnly}
-              className="h-8 border border-zinc-700 px-3 text-xs data-[state=on]:bg-cyan-500/20 data-[state=on]:text-cyan-400"
-            >
-              <Heart className="mr-1 h-3.5 w-3.5" />
-              {t("timetable.favoritesOnly")}
-            </Toggle>
+    <div className="flex min-h-full flex-col bg-[#050505]">
+      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-[#050505]/92 px-4 py-3 backdrop-blur-md md:px-6 md:py-4">
+        <div className="mx-auto max-w-md md:max-w-7xl">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                  SYNCHRONICITY&apos;26
+                </div>
+                <h1 className="mt-1 text-xl font-semibold tracking-tight text-zinc-50 md:text-[1.8rem]">
+                  {t("timetable.title")}
+                </h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <ImportFromImageButton
+                  onImportAction={(ids) => {
+                    setFavorites((prev) => {
+                      const next = { ...prev };
+                      ids.forEach((id) => {
+                        next[id] = true;
+                      });
+                      return next;
+                    });
+                  }}
+                />
+                <Button
+                  onPress={() => setShowFavoritesOnly((value) => !value)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    showFavoritesOnly
+                      ? "bg-blue-500/30 text-blue-300 border border-blue-500/50"
+                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-700 hover:border-zinc-600"
+                  }`}
+                >
+                  <Heart className={`h-4 w-4 ${showFavoritesOnly ? "fill-current" : ""}`} />
+                  {t("timetable.favoritesOnly")}
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-[18rem_minmax(0,1fr)] md:items-center">
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-1">
+                <button
+                  className={`h-9 rounded-xl text-sm font-medium transition-colors ${
+                    day === "1" ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                  onClick={() => setDay("1")}
+                  aria-label={t("timetable.tabs.day1")}
+                >
+                  {t("timetable.tabs.day1")}
+                </button>
+                <button
+                  className={`h-9 rounded-xl text-sm font-medium transition-colors ${
+                    day === "2" ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                  onClick={() => setDay("2")}
+                  aria-label={t("timetable.tabs.day2")}
+                >
+                  {t("timetable.tabs.day2")}
+                </button>
+              </div>
+
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t("timetable.searchPlaceholder")}
+                  aria-label={t("timetable.searchPlaceholder")}
+                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 pl-9 pr-10 text-zinc-200"
+                />
+                {query ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
+                    aria-label={t("timetable.clearSearch")}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
-        <div className="relative mx-auto mt-3 max-w-md md:max-w-5xl">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-          <Input
-            value={query}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
-            placeholder={t("timetable.searchPlaceholder")}
-            className="h-9 border-zinc-700 bg-zinc-900 pl-9 pr-8 text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-cyan-500"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
-              aria-label={t("timetable.clearSearch")}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-        <Tabs value={day} onValueChange={(v) => { setDay(v as "1" | "2"); document.getElementById("main-scroll")?.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-3">
-          <TabsList className="grid w-full max-w-md grid-cols-2 bg-zinc-900 md:max-w-sm">
-            <TabsTrigger value="1">{t("timetable.tabs.day1")}</TabsTrigger>
-            <TabsTrigger value="2">{t("timetable.tabs.day2")}</TabsTrigger>
-          </TabsList>
-        </Tabs>
       </header>
 
-      <main className="flex-1 space-y-6 px-4 py-4 md:grid md:grid-cols-2 md:gap-6 md:space-y-0 lg:grid-cols-3">
-        {rows.length === 0 ? (
-          <div className="col-span-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-12 text-center text-sm text-zinc-400">
-            {query.trim()
-              ? t("timetable.noResults")
-              : showFavoritesOnly
-              ? t("timetable.empty")
-              : t("timetable.empty")}
+      <main className="flex-1 px-4 py-4 md:px-6 md:py-6">
+        <div className="mx-auto max-w-md space-y-4 md:max-w-7xl">
+          {/* Venue Quick Navigation */}
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-2">
+            <div className="flex gap-2 w-min md:w-full">
+              <button
+                onClick={() => setQuery("")}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                  query === ""
+                    ? "bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50"
+                    : "border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                All
+              </button>
+              {Array.from(
+                new Set(daySets.map((set) => set.venueId || "").filter(Boolean))
+              )
+                .map((venueId) => venueMap.get(venueId))
+                .filter(Boolean)
+                .map((venue) => (
+                  <button
+                    key={venue?.id}
+                    onClick={() => setQuery("")}
+                    className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all border"
+                    style={{
+                      borderColor: `${venue?.color}40`,
+                      backgroundColor: `${venue?.color}15`,
+                      color: venue?.color,
+                    }}
+                  >
+                    {venue?.name.split(" ").pop()}
+                  </button>
+                ))}
+            </div>
           </div>
-        ) : (
-          rows.map((row) => (
-            <section key={row.venueId} className="md:rounded-xl md:border md:border-zinc-800 md:bg-zinc-900/30 md:p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <span
-                  className="inline-block h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: row.venue.color }}
-                />
-                <h2 className="text-sm font-semibold text-zinc-200">{row.venue.name}</h2>
-                <span className="text-xs text-zinc-500">
-                  {row.venue.area === "A"
-                    ? t("timetable.areaA")
-                    : row.venue.area === "B"
-                    ? t("timetable.areaB")
-                    : t("timetable.areaOther")}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                {row.sets.map((s) => {
-                    const isFav = !!favorites[s.id];
-                    return (
-                      <div
-                        key={s.id}
-                        onClick={() => { setSelectedSet(s); setSheetOpen(true); }}
-                        className="flex cursor-pointer items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-3 transition-colors hover:border-zinc-700 hover:bg-zinc-800/50"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 text-xs text-zinc-400">
-                            <span className="font-mono">
-                              {formatTime(s.startAt)} - {formatTime(s.finishAt)}
-                            </span>
-                          </div>
-                          <div className="mt-0.5 truncate text-[15px] font-medium text-zinc-100">
-                            {s.artistName}
-                          </div>
-                          <div className="mt-0.5 flex items-center gap-1 text-xs text-zinc-500">
-                            <MapPin className="h-3 w-3" />
-                            <span className="truncate">{s.stageName}</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleFavorite(s.id); }}
-                          className={cn(
-                            "ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
-                            isFav
-                              ? "bg-pink-500/15 text-pink-500"
-                              : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                          )}
-                          aria-label={isFav ? t("timetable.removeFavorite") : t("timetable.addFavorite")}
-                        >
-                          <Heart className={cn("h-4 w-4", isFav && "fill-current")} />
-                        </button>
-                      </div>
-                    );
-                  })}
-              </div>
-            </section>
-          ))
-        )}
+
+          <div className="flex items-center justify-between text-xs text-zinc-500">
+            <span>{showFavoritesOnly ? t("timetable.favoritesOnly") : t("map.routeSets", { count: visibleSets.length })}</span>
+            <span>{visibleSets.length} / {daySets.length}</span>
+          </div>
+
+          {visibleSets.length === 0 ? (
+            <div className="rounded-[28px] border border-zinc-800 bg-zinc-950/70 px-5 py-12 text-center text-sm text-zinc-400">
+              {query.trim() ? t("timetable.noResults") : t("timetable.empty")}
+            </div>
+          ) : (
+            <TimetableBoard
+              sets={visibleSets}
+              frameSets={daySets}
+              selectedIds={favoriteIds}
+              onSelectSet={setSelectedSet}
+              onToggleFavorite={toggleFavorite}
+            />
+          )}
+        </div>
       </main>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" className="border-zinc-800 bg-[#0a0a0a] text-zinc-100 md:max-w-md md:self-end">
-          {selectedSet && (
-            <>
-              <SheetHeader>
-                <SheetTitle className="text-zinc-100">{selectedSet.artistName}</SheetTitle>
-                <SheetDescription className="text-zinc-400">
-                  {formatTime(selectedSet.startAt)} - {formatTime(selectedSet.finishAt)} · {" "}
-                  {venueMap.get(selectedSet.venueId || "")?.name ?? selectedSet.stageName}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="space-y-4 px-4 pb-6 pt-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="inline-block h-2 w-2 rounded-full"
-                    style={{
-                      backgroundColor: venueMap.get(selectedSet.venueId || "")?.color,
-                    }}
-                  />
-                  <span className="text-sm text-zinc-300">
-                    {venueMap.get(selectedSet.venueId || "")?.name ?? selectedSet.stageName}
-                  </span>
-                  <span className="text-xs text-zinc-500">
-                    {(venueMap.get(selectedSet.venueId || "")?.area === "A"
-                      ? t("timetable.areaA")
-                      : venueMap.get(selectedSet.venueId || "")?.area === "B"
-                      ? t("timetable.areaB")
-                      : t("timetable.areaOther")) || ""}
-                  </span>
+      <Modal.Root
+        isOpen={!!selectedSet}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedSet(null);
+          }
+        }}
+      >
+        <Modal.Backdrop className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
+        <Modal.Container className="fixed inset-x-0 bottom-0 z-50 w-full sm:bottom-auto sm:inset-y-auto sm:left-1/2 sm:top-1/2 sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2">
+          <Modal.Dialog className="rounded-t-[28px] border border-zinc-800 bg-[#050505] outline-none sm:rounded-[28px]">
+            {selectedSet ? (
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                      {formatTime(selectedSet.startAt)} - {formatTime(selectedSet.finishAt)}
+                    </div>
+                    <h2 className="mt-2 text-2xl font-semibold text-zinc-50">
+                      {selectedSet.artistName}
+                    </h2>
+                    <div className="mt-2 flex items-center gap-2 text-sm text-zinc-400">
+                      <MapPin className="h-4 w-4" />
+                      <span>{venueMap.get(selectedSet.venueId || "")?.name ?? selectedSet.stageName}</span>
+                    </div>
+                  </div>
+                  <Modal.CloseTrigger className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 text-zinc-400">
+                    <X className="h-4 w-4" />
+                  </Modal.CloseTrigger>
                 </div>
 
-                <button
-                  onClick={() => {
-                    toggleFavorite(selectedSet.id);
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-colors",
-                    favorites[selectedSet.id]
-                      ? "bg-pink-500/15 text-pink-500"
-                      : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
-                  )}
-                >
-                  <Heart
-                    className={cn("h-4 w-4", favorites[selectedSet.id] && "fill-current")}
-                  />
-                  {favorites[selectedSet.id]
-                    ? t("timetable.removeFavorite")
-                    : t("timetable.addFavorite")}
-                </button>
-
-                {(() => {
-                  const sameVenueSets = timetable
-                    .filter(
-                      (t) =>
-                        t.venueId === selectedSet.venueId && t.id !== selectedSet.id
-                    )
-                    .sort((a, b) => a.startAt - b.startAt);
-                  if (sameVenueSets.length === 0) return null;
-                  return (
-                    <div>
-                      <div className="mb-2 text-xs font-semibold text-zinc-300">
-                        {t("timetable.otherAtVenue")}
-                      </div>
-                      <div className="space-y-2">
-                        {sameVenueSets.map((s) => (
-                          <div
-                            key={s.id}
-                            onClick={() => setSelectedSet(s)}
-                            className="cursor-pointer rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 transition-colors hover:border-zinc-700"
-                          >
-                            <div className="text-xs text-zinc-400">
-                              <span className="font-mono">
-                                {formatTime(s.startAt)} - {formatTime(s.finishAt)}
-                              </span>
-                              <span className="ml-2 text-[10px]">
-                                {s.day === 1 ? t("timetable.tabs.day1") : t("timetable.tabs.day2")}
-                              </span>
-                            </div>
-                            <div className="text-sm font-medium text-zinc-100">{s.artistName}</div>
-                            <div className="text-[10px] text-zinc-500">{s.stageName}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {(() => {
-                  const sameArtistSets = timetable
-                    .filter(
-                      (t) =>
-                        t.artistName === selectedSet.artistName && t.id !== selectedSet.id
-                    )
-                    .sort((a, b) => a.startAt - b.startAt);
-                  if (sameArtistSets.length === 0) return null;
-                  return (
-                    <div>
-                      <div className="mb-2 text-xs font-semibold text-zinc-300">
-                        {t("timetable.otherDays")}
-                      </div>
-                      <div className="space-y-2">
-                        {sameArtistSets.map((s) => (
-                          <div
-                            key={s.id}
-                            onClick={() => setSelectedSet(s)}
-                            className="cursor-pointer rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 transition-colors hover:border-zinc-700"
-                          >
-                            <div className="text-xs text-zinc-400">
-                              <span className="font-mono">
-                                {formatTime(s.startAt)} - {formatTime(s.finishAt)}
-                              </span>
-                              <span className="ml-2 text-[10px]">
-                                {s.day === 1 ? t("timetable.tabs.day1") : t("timetable.tabs.day2")}
-                              </span>
-                            </div>
-                            <div className="text-sm font-medium text-zinc-100">{s.stageName}</div>
-                            <div className="text-[10px] text-zinc-500">
-                              {venueMap.get(s.venueId || "")?.name ?? s.venueId}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
+                <div className="mt-5 space-y-3">
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 px-4 py-3 text-sm text-zinc-400">
+                    {selectedSet.stageName}
+                  </div>
+                  <button
+                    onClick={() => toggleFavorite(selectedSet.id)}
+                    className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                      favorites[selectedSet.id]
+                        ? "bg-blue-500/30 text-blue-300 border border-blue-500/50 hover:bg-blue-500/40"
+                        : "bg-zinc-800/50 text-zinc-300 border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800/70"
+                    }`}
+                  >
+                    <Heart className={`inline-block h-4 w-4 mr-2 ${favorites[selectedSet.id] ? "fill-current" : ""}`} />
+                    {favorites[selectedSet.id]
+                      ? t("timetable.removeFavorite")
+                      : t("timetable.addFavorite")}
+                  </button>
+                </div>
               </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+            ) : null}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Root>
     </div>
   );
 }

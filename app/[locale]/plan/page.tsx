@@ -5,7 +5,6 @@ import useLocalStorageState from "use-local-storage-state";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { timetable } from "@/lib/data/timetable";
 import { venueMap } from "@/lib/data/venues";
@@ -142,63 +141,58 @@ export default function PlanPage() {
           <>
             <Card className="border-zinc-800 bg-zinc-900">
               <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-xs text-zinc-400">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex-1 space-y-2">
+                    <div className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-500">
                       {t("plan.scoreLabel")}
                     </div>
-                    <div className="mt-1 text-2xl font-bold">{score.badge}</div>
-                    <p className="mt-2 text-sm text-zinc-400">{score.advice}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge
-                      className={
-                        score.color === "green"
-                          ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
-                          : score.color === "yellow"
-                          ? "border-amber-500/30 bg-amber-500/15 text-amber-400"
-                          : "border-rose-500/30 bg-rose-500/15 text-rose-400"
-                      }
-                    >
-                      {t("plan.scoreDetail", {
-                        impossible: score.impossibleJumps,
-                        buffer: score.averageBufferMinutes,
-                      })}
-                    </Badge>
-                    <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap">
-                      {canShare && (
-                        <button
-                          onClick={sharePlan}
-                          className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
-                        >
-                          <Share2 className="h-3.5 w-3.5" />
-                          {t("plan.share")}
-                        </button>
-                      )}
-                      <button
-                        onClick={exportToCalendar}
-                        className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
-                      >
-                        <CalendarPlus className="h-3.5 w-3.5" />
-                        {t("plan.exportCalendar")}
-                      </button>
-                      <button
-                        onClick={copyPlan}
-                        className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
-                      >
-                        {copied ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
-                            <span className="text-emerald-400">{t("plan.copied")}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            {t("plan.copyPlan")}
-                          </>
-                        )}
-                      </button>
+                    <div className="text-3xl font-bold text-cyan-400">
+                      {score.badge}
                     </div>
+                    <div className="max-w-md space-y-1.5">
+                      <p className="text-sm leading-relaxed text-zinc-300">{score.advice}</p>
+                      <p className="text-xs text-zinc-500">
+                        {t("plan.scoreDetail", {
+                          impossible: score.impossibleJumps,
+                          buffer: score.averageBufferMinutes,
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 lg:justify-end">
+                    {canShare && (
+                      <button
+                        onClick={sharePlan}
+                        className="flex items-center gap-1.5 rounded-2xl border border-zinc-700 bg-zinc-900/60 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-600 hover:bg-zinc-900 hover:text-zinc-200"
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                        {t("plan.share")}
+                      </button>
+                    )}
+                    <button
+                      onClick={exportToCalendar}
+                      className="flex items-center gap-1.5 rounded-2xl border border-zinc-700 bg-zinc-900/60 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-600 hover:bg-zinc-900 hover:text-zinc-200"
+                    >
+                      <CalendarPlus className="h-3.5 w-3.5" />
+                      {t("plan.exportCalendar")}
+                    </button>
+                    <button
+                      onClick={copyPlan}
+                      className="flex items-center gap-1.5 rounded-2xl border border-zinc-700 bg-zinc-900/60 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-600 hover:bg-zinc-900 hover:text-zinc-200"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-emerald-400" />
+                          <span className="text-emerald-400">{t("plan.copied")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5" />
+                          {t("plan.copyPlan")}
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </CardContent>

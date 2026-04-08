@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import useLocalStorageState from "use-local-storage-state";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePersistentState } from "@/lib/hooks/use-persistent-state";
+// import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { timetable } from "@/lib/data/timetable";
 import { venueMap } from "@/lib/data/venues";
 import { planRoute, formatTime } from "@/lib/utils/route-planner";
@@ -30,9 +30,9 @@ const VenueMap = dynamic(() => import("@/components/venue-map"), {
 export default function MapPage() {
   const { t } = useTranslation();
   const [day, setDay] = useDay();
-  const [favorites] = useLocalStorageState<Record<string, boolean>>(
+  const [favorites] = usePersistentState<Record<string, boolean>>(
     "synchronicity-favorites",
-    { defaultValue: {} }
+    {},
   );
 
   const dayNum = day === "1" ? 1 : 2;
@@ -53,26 +53,32 @@ export default function MapPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="absolute left-0 right-0 top-0 z-[1000] border-b border-zinc-800/80 bg-[#0a0a0a]/80 px-4 py-3 backdrop-blur md:left-56">
-        <div className="mx-auto max-w-md md:max-w-3xl">
+      <header className="absolute left-0 right-0 top-0 z-[1000] border-b border-zinc-800/80 bg-[#0a0a0a]/80 px-4 py-3 backdrop-blur md:left-56 md:px-6 md:py-4">
+        <div className="mx-auto max-w-md md:max-w-6xl">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-semibold tracking-tight">
+            <h1 className="text-lg font-semibold tracking-tight md:text-[1.7rem]">
               {t("map.title")}
             </h1>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-zinc-400 md:text-sm">
               {t("map.selectedCount", { count: favoriteSets.length })}
             </span>
           </div>
-          <Tabs
-            value={day}
-            onValueChange={(v) => { setDay(v as "1" | "2"); document.getElementById("main-scroll")?.scrollTo({ top: 0, behavior: "smooth" }); }}
-            className="mt-3"
-          >
-            <TabsList className="grid w-full max-w-md grid-cols-2 bg-zinc-900/90 md:max-w-sm">
-              <TabsTrigger value="1">{t("map.tabs.day1")}</TabsTrigger>
-              <TabsTrigger value="2">{t("map.tabs.day2")}</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex bg-zinc-900/80 border border-zinc-800 rounded-lg p-1 w-full overflow-hidden shrink-0 shadow-sm mt-3">
+            <button
+               className={`flex-1 flex justify-center items-center h-8 rounded-md text-xs transition-all ${day === "1" ? "bg-zinc-800 text-cyan-400 font-medium shadow-sm" : "text-zinc-400 hover:text-zinc-200"}`}
+               onClick={() => { setDay("1"); document.getElementById("main-scroll")?.scrollTo({ top: 0, behavior: "smooth" }); }}
+               aria-label={t("map.tabs.day1")}
+            >
+               {t("map.tabs.day1")}
+            </button>
+            <button
+               className={`flex-1 flex justify-center items-center h-8 rounded-md text-xs transition-all ${day === "2" ? "bg-zinc-800 text-cyan-400 font-medium shadow-sm" : "text-zinc-400 hover:text-zinc-200"}`}
+               onClick={() => { setDay("2"); document.getElementById("main-scroll")?.scrollTo({ top: 0, behavior: "smooth" }); }}
+               aria-label={t("map.tabs.day2")}
+            >
+               {t("map.tabs.day2")}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -84,7 +90,7 @@ export default function MapPage() {
             className={cn(
               "pointer-events-none absolute z-[1000] overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a]/90 backdrop-blur transition-all",
               routeOpen
-                ? "bottom-4 left-4 right-4 top-auto max-h-[40vh] md:bottom-4 md:left-auto md:right-4 md:top-[104px] md:w-80 md:max-h-[calc(100%-120px)]"
+                ? "bottom-4 left-4 right-4 top-auto max-h-[40vh] md:bottom-4 md:left-auto md:right-6 md:top-[118px] md:w-96 md:max-h-[calc(100%-134px)]"
                 : "bottom-4 left-auto right-4 top-auto w-auto md:bottom-4 md:right-4 md:top-auto"
             )}
           >
@@ -170,7 +176,7 @@ export default function MapPage() {
                                 </div>
                               </div>
 
-                              <div className="flex shrink-0 gap-1.5">
+                              <div className="flex shrink-0 flex-wrap gap-1.5">
                                 <a
                                   href={buildGoogleMapsUrl(
                                     venue!.lat,
@@ -180,10 +186,10 @@ export default function MapPage() {
                                   )}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                                  title="Google Maps"
+                                  className="inline-flex h-7 items-center justify-center gap-1 rounded-full bg-zinc-800 px-2.5 text-[10px] font-medium text-zinc-300 hover:bg-zinc-700"
                                 >
                                   <MapPin className="h-3 w-3" />
+                                  <span>Google</span>
                                 </a>
                                 <a
                                   href={buildAppleMapsUrl(
@@ -194,10 +200,10 @@ export default function MapPage() {
                                   )}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                                  title="Apple Maps"
+                                  className="inline-flex h-7 items-center justify-center gap-1 rounded-full bg-zinc-800 px-2.5 text-[10px] font-medium text-zinc-300 hover:bg-zinc-700"
                                 >
                                   <ExternalLink className="h-3 w-3" />
+                                  <span>Apple</span>
                                 </a>
                               </div>
                             </div>
