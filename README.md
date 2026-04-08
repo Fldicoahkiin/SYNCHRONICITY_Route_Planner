@@ -59,9 +59,18 @@ pnpm run build       # Production build
 
 ## Data Sources & Copyright Notice
 
-- **Artist names, set times, stage names, and venue information** are sourced from the **official SYNCHRONICITY mobile app / official website**.
+- **Artist names, set times, stage names, and venue information** are sourced from the **official SYNCHRONICITY'26 mobile app / official website**.
+  - Data is extracted from the official app's API and stored in `/data/2026/` for reference
+  - Run `pnpm tsx scripts/generate-data.ts` to regenerate TypeScript data exports if source JSON files are updated
+  - Festival dates: **Day 1** – April 10-11 (starts 18:30 JST), **Day 2** – April 11-12 (starts 18:30 JST)
+  - Each set's time is validated against official app timestamps to ensure accuracy
+
 - **Thumbnails and artist images** are served from the festival's official CDN (`storage.fespli.dev`).
+
+- **Venue coordinates and walking times** are pre-computed based on actual venue locations in Shibuya (Omotesandō/Meiji-dori area).
+
 - All festival-related data, artist names, trademarks, and imagery are the property of their respective rights holders (the SYNCHRONICITY festival organizers, record labels, and artists).
+
 - This project is a **non-commercial, fan-made tool** created for educational and convenience purposes. All original code is offered under the **MIT License**; however, the festival data itself remains the property of the official rights holders.
 
 ## License
