@@ -13,9 +13,8 @@ import { type LatLngExpression, divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { venues, venueMap } from "@/lib/data/venues";
 import type { TimetableSet } from "@/lib/data/timetable";
-import { getWalkMinutes } from "@/lib/data/walking-matrix";
 import { useTranslation } from "@/lib/i18n/client";
-import { formatTime } from "@/lib/utils/route-planner";
+import { formatTime, type RouteLeg } from "@/lib/utils/route-planner";
 
 function createColorIcon(color: string) {
   return divIcon({
@@ -66,9 +65,11 @@ function MapBounds({ points }: { points: LatLngExpression[] }) {
 export default function VenueMap({
   favorites,
   daySets,
+  routeLegs,
 }: {
   favorites: TimetableSet[];
   daySets?: TimetableSet[];
+  routeLegs?: RouteLeg[];
 }) {
   const { t } = useTranslation();
   const sortedFavorites = useMemo(
@@ -77,11 +78,10 @@ export default function VenueMap({
   );
 
   const routeVenueIds = useMemo(() => {
-    const ids = sortedFavorites
-      .map((s) => s.venueId)
-      .filter((v): v is string => !!v);
+    const sourceSets = routeLegs?.length ? routeLegs.map((leg) => leg.set) : sortedFavorites;
+    const ids = sourceSets.map((s) => s.venueId).filter((v): v is string => !!v);
     return [...new Set(ids)];
-  }, [sortedFavorites]);
+  }, [routeLegs, sortedFavorites]);
 
   const routePoints: LatLngExpression[] = useMemo(() => {
     return routeVenueIds
@@ -90,7 +90,49 @@ export default function VenueMap({
       .map((v) => [v.lat, v.lng]);
   }, [routeVenueIds]);
 
-  const boundsPoints = routePoints.length > 0 ? routePoints : venues.map((v) => [v.lat, v.lng] as LatLngExpression);
+  const routeSegments = useMemo(
+    () =>
+      (routeLegs ?? [])
+        .filter((leg) => leg.nextSet && leg.set.venueId && leg.nextSet.venueId)
+        .map((leg) => {
+          const fromVenue = venueMap.get(leg.set.venueId || "");
+          const toVenue = venueMap.get(leg.nextSet?.venueId || "");
+
+          if (!fromVenue || !toVenue) {
+            return null;
+          }
+
+          const positions: LatLngExpression[] =
+            leg.geometry && leg.geometry.length > 1
+              ? leg.geometry
+              : ([
+                  [fromVenue.lat, fromVenue.lng],
+                  [toVenue.lat, toVenue.lng],
+                ] as LatLngExpression[]);
+
+          const midIndex = Math.floor(positions.length / 2);
+          const midPoint = positions[midIndex];
+
+          return {
+            key: `${leg.set.id}-${leg.nextSet?.id}`,
+            positions,
+            midPoint,
+            minutes: leg.walkMinutes,
+            status: leg.status,
+          };
+        })
+        .filter(Boolean),
+    [routeLegs],
+  );
+
+  const boundsPoints =
+    routeSegments.length > 0
+      ? routeSegments
+          .filter((segment): segment is NonNullable<typeof segment> => !!segment)
+          .flatMap((segment) => segment.positions)
+      : routePoints.length > 0
+        ? routePoints
+        : venues.map((v) => [v.lat, v.lng] as LatLngExpression);
 
   const favoriteIds = useMemo(() => new Set(favorites.map((s) => s.id)), [favorites]);
 
@@ -103,7 +145,8 @@ export default function VenueMap({
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        crossOrigin="anonymous"
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
       {venues.map((v) => {
@@ -160,42 +203,35 @@ export default function VenueMap({
         );
       })}
 
-      {routePoints.length > 1 &&
-        routePoints.slice(0, -1).map((from, idx) => {
-          const to = routePoints[idx + 1];
-          return (
-            <Polyline
-              key={idx}
-              positions={[from, to]}
-              pathOptions={{
-                color: "#22d3ee",
-                weight: 4,
-                opacity: 0.8,
-                dashArray: "6 6",
-              }}
-            />
-          );
-        })}
+      {routeSegments.map((segment) => (
+        <Polyline
+          key={segment.key}
+          positions={segment.positions}
+          pathOptions={{
+            color:
+              segment.status === "impossible"
+                ? "#fb7185"
+                : segment.status === "tight"
+                  ? "#f59e0b"
+                  : "#0ea5e9",
+            weight: 5,
+            opacity: 0.85,
+            lineCap: "round",
+            lineJoin: "round",
+            dashArray: segment.status === "impossible" ? "6 8" : undefined,
+          }}
+        />
+      ))}
 
-      {routePoints.length > 1 &&
-        routePoints.slice(0, -1).map((from, idx) => {
-          const to = routePoints[idx + 1];
-          const fromVenueId = routeVenueIds[idx];
-          const toVenueId = routeVenueIds[idx + 1];
-          const minutes = getWalkMinutes(fromVenueId, toVenueId);
-          const [lat1, lng1] = from as [number, number];
-          const [lat2, lng2] = to as [number, number];
-          const mid: LatLngExpression = [(lat1 + lat2) / 2, (lng1 + lng2) / 2];
-          return (
-            <Marker
-              key={`walk-${idx}`}
-              position={mid}
-              icon={createWalkLabelIcon(minutes, t("map.minutesUnit"))}
-              opacity={1}
-              interactive={false}
-            />
-          );
-        })}
+      {routeSegments.map((segment) => (
+        <Marker
+          key={`walk-${segment.key}`}
+          position={segment.midPoint}
+          icon={createWalkLabelIcon(segment.minutes, t("map.minutesUnit"))}
+          opacity={1}
+          interactive={false}
+        />
+      ))}
 
       <MapBounds points={boundsPoints} />
     </MapContainer>
