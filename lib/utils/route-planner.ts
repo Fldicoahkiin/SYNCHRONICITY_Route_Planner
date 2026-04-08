@@ -271,9 +271,8 @@ function summarizeRoute(
       comfortableLegs += 1;
     }
 
-    if (transfer.bufferMinutes > 0) {
-      totalBuffer += transfer.bufferMinutes;
-    }
+    // Include negative buffers so the average reflects impossible/tight transitions as well
+    totalBuffer += transfer.bufferMinutes;
 
     legs.push({
       set: current,

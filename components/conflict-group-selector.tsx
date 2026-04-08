@@ -118,6 +118,11 @@ export function ConflictGroupSelector({
                         <MapPin className="h-3.5 w-3.5" />
                         {venue?.name ?? performance.stageName}
                       </span>
+                      {preview?.before && preview.before.kind === "resolved" && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-zinc-800 px-2 py-0.5 text-[11px] text-zinc-300">
+                          {t("plan.leg.walk", { minutes: preview.before.walkMinutes ?? 0 })}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Checkbox>
