@@ -645,7 +645,7 @@ export const timetable: TimetableSet[] = [
     "stageId": "1",
     "stageName": "O-EAST",
     "venueId": "o-east",
-    "day": 1,
+    "day": 2,
     "startAt": 1775900100,
     "finishAt": 1775902800
   },
