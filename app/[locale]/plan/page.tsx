@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
 import useLocalStorageState from "use-local-storage-state";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
 import { usePlannedRoute } from "@/lib/hooks/use-planned-route";
@@ -17,6 +18,7 @@ import { downloadIcal } from "@/lib/utils/ical";
 import { getRouteExportStops } from "@/lib/utils/routing";
 import { RoutePlannerPanel } from "@/components/route-planner-panel";
 import { RouteExportSheet } from "@/components/route-export-sheet";
+import type { Locale } from "@/lib/i18n/settings";
 import {
   CalendarPlus,
   Check,
@@ -27,6 +29,7 @@ import {
 } from "lucide-react";
 
 export default function PlanPage() {
+  const pathname = usePathname();
   const { t } = useTranslation();
   const [day, setDay] = useDay();
   const [copied, setCopied] = useState(false);
@@ -69,6 +72,7 @@ export default function PlanPage() {
   );
   const canShare = typeof navigator !== "undefined" && "share" in navigator;
   const canOpenRoute = exportStops.length > 1;
+  const locale = (pathname.split("/")[1] as Locale) || "ja";
 
   const planText = useMemo(() => {
     if (route.totalSets === 0) {
@@ -194,7 +198,7 @@ export default function PlanPage() {
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-8 text-center text-sm text-zinc-400">
             <p>{t("plan.empty")}</p>
             <Link
-              href="timetable"
+              href={`/${locale}/browse`}
               className="mt-4 inline-flex items-center gap-1 rounded-lg bg-cyan-500/10 px-4 py-2 text-xs font-medium text-cyan-400 transition-colors hover:bg-cyan-500/20"
             >
               {t("plan.browseTimetable")}

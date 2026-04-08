@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import useLocalStorageState from "use-local-storage-state";
 import { Input } from "@heroui/react";
 import { useTranslation } from "@/lib/i18n/client";
@@ -17,6 +18,7 @@ import { getRouteExportStops } from "@/lib/utils/routing";
 import { TimetableBoard } from "@/components/timetable-board";
 import { RoutePlannerPanel } from "@/components/route-planner-panel";
 import { ImportFromImageButton } from "@/components/import-from-image";
+import type { Locale } from "@/lib/i18n/settings";
 import {
   ArrowRight,
   CalendarDays,
@@ -42,6 +44,7 @@ const VenueMap = dynamic(() => import("@/components/venue-map"), {
 });
 
 export default function BrowsePage() {
+  const pathname = usePathname();
   const { t } = useTranslation();
   const [day, setDay] = useDay();
   const [favorites, setFavorites] = useLocalStorageState<Record<string, boolean>>(
@@ -103,6 +106,7 @@ export default function BrowsePage() {
   const googleRouteUrl = useMemo(() => buildGoogleMapsRouteUrl(exportStops), [exportStops]);
   const appleRouteUrl = useMemo(() => buildAppleMapsRouteUrl(exportStops), [exportStops]);
   const canOpenRoute = exportStops.length > 1;
+  const locale = (pathname.split("/")[1] as Locale) || "ja";
 
   return (
     <div className="flex min-h-full flex-col bg-[#050505]">
@@ -294,7 +298,7 @@ export default function BrowsePage() {
                 <div className="rounded-[28px] border border-zinc-800 bg-zinc-950/70 px-5 py-12 text-center text-sm text-zinc-400">
                   <p>还没有规划路线</p>
                   <Link
-                    href="timetable"
+                    href={`/${locale}/browse`}
                     className="mt-4 inline-flex items-center gap-1 rounded-lg bg-cyan-500/10 px-4 py-2 text-xs font-medium text-cyan-400 transition-colors hover:bg-cyan-500/20"
                   >
                     选择演出
