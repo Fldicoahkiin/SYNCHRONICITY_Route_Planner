@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
-import { verifiedVenues, verifiedVenueMap } from "@/lib/data/venues-verified";
+import Image from "next/image";
+import { useMemo } from "react";
+import { verifiedVenueMap } from "@/lib/data/venues-verified";
 import type { TimetableSet } from "@/lib/data/timetable";
 import { useTranslation } from "@/lib/i18n/client";
 import { formatTime, type RouteLeg } from "@/lib/utils/route-planner";
@@ -112,11 +113,30 @@ export default function GoogleMapsEmbed({
     if (!routeLegs || routeLegs.length === 0) return "";
 
     const pathPoints = routeLegs
-      .map((leg) => {
-        const venue = verifiedVenueMap.get(leg.set.venueId || "");
-        return venue ? `${venue.lat},${venue.lng}` : null;
+      .flatMap((leg) => {
+        if (leg.geometry && leg.geometry.length > 1) {
+          return leg.geometry.map(([lat, lng]) => `${lat},${lng}`);
+        }
+
+        const fromVenue = verifiedVenueMap.get(leg.set.venueId || "");
+        const toVenue = leg.nextSet
+          ? verifiedVenueMap.get(leg.nextSet.venueId || "")
+          : undefined;
+
+        if (!fromVenue) {
+          return [];
+        }
+
+        if (!toVenue) {
+          return [`${fromVenue.lat},${fromVenue.lng}`];
+        }
+
+        return [
+          `${fromVenue.lat},${fromVenue.lng}`,
+          `${toVenue.lat},${toVenue.lng}`,
+        ];
       })
-      .filter((p): p is string => !!p);
+      .filter((point, index, list) => point && point !== list[index - 1]);
 
     return pathPoints.length > 1 ? `&path=color:0x0ea5e9ff|weight:3|${pathPoints.join("|")}` : "";
   }, [routeLegs]);
@@ -126,12 +146,13 @@ export default function GoogleMapsEmbed({
     // Note: This uses Google Static Maps API
     // For production, you'll need to set up a backend proxy or use Maps Embed API
     const baseUrl = "https://maps.googleapis.com/maps/api/staticmap";
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
     const params = new URLSearchParams({
       center: `${mapCenter.lat},${mapCenter.lng}`,
       zoom: String(mapCenter.zoom),
       size: "600x400",
       maptype: "roadmap",
-      key: "${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}", // Embed API key
+      key: apiKey,
     });
 
     // Add multiple style parameters
@@ -162,11 +183,13 @@ export default function GoogleMapsEmbed({
         {routeVenueIds.length > 0 ? (
           <>
             {/* Static map image */}
-            <img
+            <Image
               src={mapUrl}
               alt="SYNCHRONICITY Route Map"
-              className="w-full h-full object-cover"
-              loading="lazy"
+              fill
+              unoptimized
+              sizes="(max-width: 768px) 100vw, 600px"
+              className="object-cover"
             />
 
             {/* Route info overlay */}

@@ -11,8 +11,6 @@ const HEADER_HEIGHT = 48;
 const TIME_COLUMN_WIDTH = 60;
 const COLUMN_WIDTH = 120;
 const MINUTE_HEIGHT = 2.4;
-const ROW_GAP = 2;
-
 interface ModernTimetableGridProps {
   sets: TimetableSet[];
   frameSets?: TimetableSet[];

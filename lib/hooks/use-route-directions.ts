@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   getRouteLegKey,
-  type PlannedRoute,
+  type RouteLeg,
   type RouteTravelOverride,
 } from "@/lib/utils/route-planner";
 import {
@@ -13,17 +13,21 @@ import {
 
 const routeCache = new Map<string, RouteTravelOverride>();
 
-export function useRouteDirections(route: PlannedRoute) {
+interface RouteLegCarrier {
+  legs: RouteLeg[];
+}
+
+export function useRouteDirections(route?: RouteLegCarrier) {
   const [overrides, setOverrides] = useState<Record<string, RouteTravelOverride>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [hasRouteApiError, setHasRouteApiError] = useState(false);
 
   const legsToResolve = useMemo(
     () =>
-      route.legs.filter(
+      (route?.legs ?? []).filter(
         (leg) => leg.nextSet && leg.set.venueId && leg.nextSet.venueId,
       ),
-    [route.legs],
+    [route?.legs],
   );
 
   useEffect(() => {

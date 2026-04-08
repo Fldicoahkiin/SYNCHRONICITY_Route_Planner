@@ -15,12 +15,12 @@ export function buildGoogleMapsEmbedUrl(
   lng: number,
   title?: string
 ): string {
-  const center = `${lat},${lng}`;
   const zoom = 16;
-  const mapType = "roadmap";
-  
-  // Embed API URL - no API key required for basic embed
-  return `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}&q=${encodeURIComponent(title || `${lat},${lng}`)}&zoom=${zoom}`;
+  // Use environment variable for API key
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+
+  // Embed API URL
+  return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(title || `${lat},${lng}`)}&zoom=${zoom}`;
 }
 
 /**

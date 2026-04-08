@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/client";
 import type { Locale } from "@/lib/i18n/settings";
-import { CalendarDays, Map, Route, Home } from "lucide-react";
+import { CalendarDays, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 

@@ -122,7 +122,7 @@ export function BufferTimeline({ legs, className }: BufferTimelineProps) {
 
       {/* Timeline */}
       <div className="space-y-3">
-        {timelineItems.map((item, idx) => (
+        {timelineItems.map((item) => (
           <div key={item.leg.set.id} className="space-y-2">
             {/* Performance Block */}
             <div className="rounded-lg border border-cyan-800/50 bg-cyan-900/20 p-3">
