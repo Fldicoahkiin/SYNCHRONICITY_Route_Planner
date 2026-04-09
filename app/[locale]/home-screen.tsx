@@ -26,96 +26,87 @@ export default function Home() {
       href: href("browse"),
       label: t("home.cards.browse"),
       icon: CalendarDays,
-      accentClass:
-        "border-cyan-500/25 bg-cyan-500/[0.09] text-cyan-300 group-hover:border-cyan-400/50 group-hover:bg-cyan-500/[0.12]",
-      iconClass: "bg-cyan-400/10 text-cyan-300 ring-cyan-400/20",
+      accent: "border-cyan-500/25 bg-cyan-500/[0.06] hover:bg-cyan-500/[0.1]",
+      iconBg: "bg-cyan-400/10 text-cyan-400",
     },
     {
       href: href("plan"),
       label: t("home.cards.plan"),
       icon: Route,
-      accentClass:
-        "border-emerald-500/25 bg-emerald-500/[0.09] text-emerald-300 group-hover:border-emerald-400/50 group-hover:bg-emerald-500/[0.12]",
-      iconClass: "bg-emerald-400/10 text-emerald-300 ring-emerald-400/20",
+      accent: "border-emerald-500/25 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.1]",
+      iconBg: "bg-emerald-400/10 text-emerald-400",
     },
   ];
 
   return (
-    <div className="flex min-h-full flex-col px-4 py-7 sm:px-6 lg:px-8 lg:py-12">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 lg:gap-12">
-        <div className="flex flex-col items-center text-center">
-          <div className="inline-flex items-center rounded-full border border-zinc-800 bg-zinc-950/80 px-3 py-1.5 text-[11px] font-semibold leading-none tracking-[0.16em] text-zinc-400">
-            {t("home.subtitle")}
-          </div>
-
-          <div className="mt-5 space-y-4 lg:max-w-3xl">
-            <h1 className="text-3xl font-bold leading-tight tracking-tight text-zinc-50 sm:text-4xl lg:text-[2.9rem]">
-              {t("home.title")}
-            </h1>
-            <p className="mx-auto max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
-              {t("home.tagline")}
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 text-xs text-zinc-500 sm:text-sm">
-              <span className="rounded-full border border-zinc-800 bg-zinc-950/40 px-3 py-1.5">
-                {t("home.date")}
-              </span>
-              <span className="rounded-full border border-zinc-800 bg-zinc-950/40 px-3 py-1.5">
-                Shibuya Live Circuit
-              </span>
-            </div>
+    <div className="flex min-h-full flex-col items-center justify-center px-4 py-6 sm:px-6">
+      <div className="flex w-full max-w-md flex-col gap-5 lg:max-w-lg">
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-50 sm:text-3xl">
+            <span className="text-cyan-400">SYNC</span>HRONICITY&apos;26
+          </h1>
+          <div className="mt-1.5 text-xs text-zinc-500">
+            {t("home.date")}
           </div>
         </div>
 
-        <div className="flex justify-center flex-1">
-          <div className="grid w-full gap-4 sm:gap-5 md:grid-cols-2 max-w-4xl">
-            {cards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <Link
-                  key={card.href}
-                  href={card.href}
-                  className={`group relative flex min-h-[184px] overflow-hidden rounded-[30px] border p-5 transition-all duration-300 hover:-translate-y-1 sm:min-h-[204px] sm:p-6 lg:min-h-[220px] ${card.accentClass}`}
-                >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.05),transparent_55%)] opacity-70" />
-                  <div className="relative flex w-full flex-col justify-between gap-8">
-                    <div
-                      className={`flex h-16 w-16 items-center justify-center rounded-[24px] ring-1 sm:h-20 sm:w-20 ${card.iconClass}`}
-                    >
-                      <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
-                    </div>
-                    <div className="flex items-end justify-between gap-4">
-                      <span className="text-2xl font-semibold tracking-tight text-zinc-50 sm:text-[1.75rem] lg:text-[1.95rem]">
-                        {card.label}
-                      </span>
-                      <ChevronRight className="mb-1 h-6 w-6 shrink-0 text-zinc-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-zinc-200" />
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex justify-center">
-          <div className="grid w-full max-w-5xl gap-3 sm:grid-cols-3">
-            {[
-              { value: stats.venues, label: t("home.stats.venues") },
-              { value: stats.artists, label: t("home.stats.artists") },
-              { value: stats.sets, label: t("home.stats.sets") },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="rounded-2xl border border-zinc-800/70 bg-zinc-950/50 px-4 py-4 text-center"
+        {/* Cards */}
+        <div className="flex flex-col gap-3">
+          {cards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Link
+                key={card.href}
+                href={card.href}
+                className={`group flex items-center gap-4 rounded-2xl border p-4 transition-all duration-200 ${card.accent}`}
               >
-                <div className="text-2xl font-semibold tracking-tight text-zinc-100 sm:text-3xl">
-                  {s.value}
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${card.iconBg}`}>
+                  <Icon className="h-5 w-5" />
                 </div>
-                <div className="mt-1 text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-500">
-                  {s.label}
-                </div>
+                <span className="flex-1 text-base font-semibold text-zinc-100">
+                  {card.label}
+                </span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-400" />
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {[
+            { value: stats.venues, label: t("home.stats.venues") },
+            { value: stats.artists, label: t("home.stats.artists") },
+            { value: stats.sets, label: t("home.stats.sets") },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="rounded-xl border border-zinc-800/60 bg-zinc-950/40 px-2 py-2.5 text-center"
+            >
+              <div className="text-lg font-semibold tracking-tight text-zinc-200">
+                {s.value}
               </div>
-            ))}
-          </div>
+              <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-zinc-500">
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* GitHub */}
+        <div className="flex justify-center pt-1">
+          <a
+            href="https://github.com/Fldicoahkiin/SYNCHRONICITY_Route_Planner"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 text-[11px] text-zinc-500 transition-colors hover:text-zinc-300"
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
+              <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+            </svg>
+            GitHub
+          </a>
         </div>
       </div>
     </div>

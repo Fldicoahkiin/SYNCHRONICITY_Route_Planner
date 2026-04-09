@@ -6,14 +6,15 @@ import { usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
-import { usePersistentState } from "@/lib/hooks/use-persistent-state";
-import { TimetableBoard } from "@/components/timetable-board";
-import { ImportFromImageButton } from "@/components/import-from-image";
-import { DaySwitcher } from "@/components/day-switcher";
+import { useFavorites } from "@/lib/hooks/use-favorites";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import type { Locale } from "@/lib/i18n/settings";
 import type { TimetableSet } from "@/lib/data/timetable";
 import type { Venue } from "@/lib/data/venues";
-import { ArrowRight, Heart, Route, Search, X } from "lucide-react";
+import { Route, ArrowRight, Heart, Trash2, Search, X } from "lucide-react";
+import { ImportFromImageButton } from "@/components/import-from-image";
+import { DaySwitcher } from "@/components/day-switcher";
+import { TimetableBoard } from "@/components/timetable-board";
 
 function BrowsePageHeader({
   day,
@@ -21,14 +22,12 @@ function BrowsePageHeader({
   onDayChange,
   onQueryChange,
   onQueryClear,
-  onImportAction,
 }: {
   day: "1" | "2";
   query: string;
   onDayChange: (day: "1" | "2") => void;
   onQueryChange: (value: string) => void;
   onQueryClear: () => void;
-  onImportAction: (ids: string[]) => void;
 }) {
   const { t } = useTranslation();
 
@@ -44,7 +43,12 @@ function BrowsePageHeader({
               {t("browse.title")}
             </h1>
           </div>
-          <ImportFromImageButton onImportAction={onImportAction} />
+          <div className="flex items-center gap-2">
+            <div className="md:hidden">
+              <LocaleSwitcher />
+            </div>
+            <ImportFromImageButton onDayChange={onDayChange} />
+          </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-[18rem_minmax(0,1fr)] md:items-center">
@@ -164,10 +168,7 @@ export default function BrowsePage({
   const pathname = usePathname();
   const { t } = useTranslation();
   const [day, setDay] = useDay();
-  const [favorites, setFavorites] = usePersistentState<Record<string, boolean>>(
-    "synchronicity-favorites",
-    {},
-  );
+  const { favorites, favoriteIds, toggleFavorite, clearFavorites } = useFavorites();
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
@@ -178,10 +179,6 @@ export default function BrowsePage({
   );
 
   const dayNum = day === "1" ? 1 : 2;
-
-  const toggleFavorite = (id: string) => {
-    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const daySets = useMemo(
     () => timetableSets.filter((set) => set.day === dayNum),
@@ -222,10 +219,7 @@ export default function BrowsePage({
     });
   }, [daySets, favorites, query, resolvedVenueId, showFavoritesOnly]);
 
-  const favoriteIds = useMemo(
-    () => new Set(Object.entries(favorites).filter(([, value]) => value).map(([id]) => id)),
-    [favorites],
-  );
+  // favoriteIds now comes from useFavorites hook
   const locale = (pathname.split("/")[1] as Locale) || "ja";
 
   return (
@@ -236,15 +230,6 @@ export default function BrowsePage({
         onDayChange={setDay}
         onQueryChange={setQuery}
         onQueryClear={() => setQuery("")}
-        onImportAction={(ids) => {
-          setFavorites((prev) => {
-            const next = { ...prev };
-            ids.forEach((id) => {
-              next[id] = true;
-            });
-            return next;
-          });
-        }}
       />
 
       <main className="flex-1 px-4 py-4 md:px-6 md:py-6">
@@ -264,17 +249,32 @@ export default function BrowsePage({
 
           <div className="flex items-center justify-between text-xs text-zinc-500">
             <span>{t("timetable.resultCount", { count: visibleSets.length })}</span>
-            <button
-              onClick={() => setShowFavoritesOnly((value) => !value)}
-              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                showFavoritesOnly
-                  ? "bg-rose-500/30 text-rose-300 ring-1 ring-rose-500/50"
-                  : "border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
-              }`}
-            >
-              <Heart className={`h-3.5 w-3.5 ${showFavoritesOnly ? "fill-current" : ""}`} />
-              {t("timetable.favoritesOnly")}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (window.confirm(t("timetable.clearConfirm") || "Clear all favorites?")) {
+                    clearFavorites();
+                    setShowFavoritesOnly(false);
+                  }
+                }}
+                disabled={favoriteIds.size === 0}
+                className="flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/40 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-all hover:text-zinc-200 disabled:opacity-50"
+                title={t("timetable.clearFavorites")}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setShowFavoritesOnly((value) => !value)}
+                className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                  showFavoritesOnly
+                    ? "bg-rose-500/30 text-rose-300 ring-1 ring-rose-500/50"
+                    : "border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                <Heart className={`h-3.5 w-3.5 ${showFavoritesOnly ? "fill-current" : ""}`} />
+                {t("timetable.favoritesOnly")}
+              </button>
+            </div>
           </div>
 
           {visibleSets.length === 0 ? (
@@ -290,6 +290,7 @@ export default function BrowsePage({
               sets={visibleSets}
               frameSets={daySets}
               selectedIds={favoriteIds}
+              compactLayout={showFavoritesOnly && query === ""}
               onToggleFavorite={toggleFavorite}
             />
           )}

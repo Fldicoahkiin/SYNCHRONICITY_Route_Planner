@@ -7,12 +7,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
-import { usePersistentState } from "@/lib/hooks/use-persistent-state";
+import { useFavorites } from "@/lib/hooks/use-favorites";
 import { usePlannedRoute } from "@/lib/hooks/use-planned-route";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { calculateScore } from "@/lib/utils/scoring";
-import { formatTime } from "@/lib/utils/route-planner";
 import { buildAppleMapsRouteUrl, buildGoogleMapsRouteUrl } from "@/lib/utils/map-urls";
 import { getRouteExportStops } from "@/lib/utils/routing";
 import { RoutePlannerPanel } from "@/components/route-planner-panel";
@@ -21,7 +20,7 @@ import { DaySwitcher } from "@/components/day-switcher";
 import type { Locale } from "@/lib/i18n/settings";
 import type { TimetableSet } from "@/lib/data/timetable";
 import { cn } from "@/lib/utils";
-import { Check, Copy, Download, ExternalLink, Share2 } from "lucide-react";
+import { CheckCircle2, Download, ExternalLink } from "lucide-react";
 
 const VenueMap = dynamic(() => import("@/components/venue-map"), {
   ssr: false,
@@ -40,13 +39,9 @@ export default function PlanPage({
   const pathname = usePathname();
   const { t } = useTranslation();
   const [day, setDay] = useDay();
-  const [copied, setCopied] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
   const exportSheetRef = useRef<HTMLDivElement>(null);
-  const [favorites] = usePersistentState<Record<string, boolean>>(
-    "synchronicity-favorites",
-    {},
-  );
+  const { favorites, setFavorites } = useFavorites();
 
   const favoriteSets = useMemo(
     () => timetableSets.filter((set) => favorites[set.id]),
@@ -61,6 +56,22 @@ export default function PlanPage({
     clearGroup,
     isLoadingDirections,
   } = usePlannedRoute(favoriteSets, dayNum);
+
+  const handleSyncToFavorites = () => {
+    if (!window.confirm(t("plan.syncFavoritesConfirm") ?? "This will replace your favorites for this day with the current route. Continue?")) {
+      return;
+    }
+    const selectedIds = new Set(route.legs.map(leg => leg.set.id));
+    const daySets = timetableSets.filter(set => set.day === dayNum);
+
+    setFavorites(prev => {
+      const next = { ...prev };
+      daySets.forEach(set => { delete next[set.id]; });
+      selectedIds.forEach(id => { next[id] = true; });
+      return next;
+    });
+  };
+
   const score = useMemo(() => calculateScore(route, t), [route, t]);
   const dayLabel = day === "1" ? t("plan.tabs.day1") : t("plan.tabs.day2");
   const exportStops = useMemo(() => getRouteExportStops(route.legs), [route.legs]);
@@ -72,72 +83,8 @@ export default function PlanPage({
     () => buildAppleMapsRouteUrl(exportStops),
     [exportStops],
   );
-  const canShare = typeof navigator !== "undefined" && "share" in navigator;
   const canOpenRoute = exportStops.length > 1;
   const locale = (pathname.split("/")[1] as Locale) || "ja";
-
-  const planText = useMemo(() => {
-    if (route.totalSets === 0) {
-      return "";
-    }
-
-    const lines: string[] = [`SYNCHRONICITY'26 - ${dayLabel}`, ""];
-
-    route.legs.forEach((leg) => {
-      lines.push(
-        `${formatTime(leg.set.startAt)}-${formatTime(leg.set.finishAt)} ${leg.set.artistName} @ ${leg.set.stageName}`,
-      );
-
-      if (leg.nextSet) {
-        lines.push(
-          `  ↳ ${t("plan.leg.walk", { minutes: leg.walkMinutes })} / ${t("plan.leg.buffer", {
-            minutes: leg.bufferMinutes,
-          })}`,
-        );
-      }
-    });
-
-    lines.push("");
-    lines.push(`${t("plan.scoreLabel")}: ${score.badge}`);
-
-    if (route.impossibleLegs > 0 || route.tightLegs > 0) {
-      lines.push(t("plan.riskDetail", {
-        impossible: route.impossibleLegs,
-        tight: route.tightLegs,
-      }));
-    }
-
-    return lines.join("\n");
-  }, [dayLabel, route, score.badge, t]);
-
-  const copyPlan = async () => {
-    if (!planText) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(planText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // ignore clipboard failures
-    }
-  };
-
-  const sharePlan = async () => {
-    if (!planText || !canShare) {
-      return;
-    }
-
-    try {
-      await navigator.share({
-        title: `SYNCHRONICITY'26 - ${dayLabel}`,
-        text: planText,
-      });
-    } catch {
-      // ignore aborted shares
-    }
-  };
 
   const exportPng = async () => {
     if (!exportSheetRef.current || route.totalSets === 0) {
@@ -227,28 +174,24 @@ export default function PlanPage({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 border-t border-zinc-800 p-4">
-                  {canShare ? (
-                    <Button variant="secondary" size="sm" onClick={sharePlan}>
-                      <Share2 className="h-4 w-4" />
-                      {t("plan.share")}
-                    </Button>
-                  ) : null}
-                  <Button variant="secondary" size="sm" onClick={copyPlan}>
-                    {copied ? (
-                      <Check className="h-4 w-4 text-emerald-400" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                    {copied ? t("plan.copied") : t("plan.copyPlan")}
-                  </Button>
                   <Button
-                    variant="secondary"
+                    variant="default"
                     size="sm"
                     onClick={exportPng}
                     disabled={isExportingPng}
                   >
                     <Download className="h-4 w-4" />
                     {isExportingPng ? t("plan.exportingPng") : t("plan.exportPng")}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-cyan-500/30 bg-cyan-500/5 text-cyan-400 hover:bg-cyan-500/10"
+                    onClick={handleSyncToFavorites}
+                  >
+                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                    {t("plan.syncFavorites")}
                   </Button>
 
                   <div className="mx-1 hidden h-4 w-px bg-zinc-800 sm:block" />

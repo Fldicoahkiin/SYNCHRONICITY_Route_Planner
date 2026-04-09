@@ -1,42 +1,42 @@
 const en = {
   meta: {
-    title: "SYNCHRONICITY'26 Route Planner",
+    title: "SYNC'26 Route Planner",
     description: "Check the timetable, venue map, and your saved route in one place.",
     pages: {
       home: {
-        title: "SYNCHRONICITY'26 Route Planner",
+        title: "SYNC'26 Route Planner",
         description: "Jump into the timetable, route plan, and venue map from one home screen.",
       },
       browse: {
-        title: "Browse Overview | SYNCHRONICITY'26",
+        title: "Timetable | SYNC'26",
         description: "See the timetable, map, and route suggestions together for each day.",
       },
       plan: {
-        title: "My Plan | SYNCHRONICITY'26",
+        title: "My Plan | SYNC'26",
         description: "Review route branches, walking times, and exports for your saved sets.",
       },
       map: {
-        title: "Venue Map | SYNCHRONICITY'26",
+        title: "Venue Map | SYNC'26",
         description: "Follow venue locations and your current route on the map.",
       },
       timetable: {
-        title: "Timetable | SYNCHRONICITY'26",
+        title: "Timetable | SYNC'26",
         description: "Browse every set by time and venue, then save the ones you want to catch.",
       },
     },
   },
   nav: {
     home: "Home",
-    browse: "Browse",
+    browse: "Timetable",
     plan: "Plan",
     map: "Map",
   },
   home: {
-    subtitle: "SYNCHRONICITY'26",
+    subtitle: "SYNC'26",
     title: "Route Planner",
     tagline: "Keep the timetable, map, and saved route together.",
     cards: {
-      browse: "Browse Overview",
+      browse: "Full Timetable",
       plan: "Plan Route",
       map: "View Map",
     },
@@ -103,6 +103,8 @@ const en = {
     exportPng: "Export PNG",
     exportAppleRoute: "Export Apple Maps",
     exportGoogleRoute: "Export Google Maps",
+    syncFavorites: "Save to Favorites",
+    syncFavoritesConfirm: "This will replace your favorites for this day with the current route. Continue?",
     exportHint: "Map on top, your personal timetable below.",
     timelineTitle: "My Timetable",
     routeDetailsTitle: "Route details",
@@ -113,7 +115,7 @@ const en = {
     scoreLabel: "Route status",
     scoreDetail: "{{impossible}} conflicts · {{buffer}} min average buffer",
     empty: "No sets saved yet. Add a few from the timetable first.",
-    browseTimetable: "Browse timetable",
+    browseTimetable: "Go to timetable",
     copyPlan: "Copy route",
     copied: "Copied",
     exportingPng: "Exporting…",

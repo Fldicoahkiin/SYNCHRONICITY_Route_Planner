@@ -1,42 +1,42 @@
 const ja = {
   meta: {
-    title: "SYNCHRONICITY'26 Route Planner",
+    title: "SYNC'26 Route Planner",
     description: "タイムテーブル、会場マップ、保存したルートをまとめて確認。",
     pages: {
       home: {
-        title: "SYNCHRONICITY'26 Route Planner",
+        title: "SYNC'26 Route Planner",
         description: "トップからタイムテーブル、ルート、地図へそのまま入れます。",
       },
       browse: {
-        title: "全体を見る | SYNCHRONICITY'26",
+        title: "タイムテーブル | SYNC'26",
         description: "日ごとのタイムテーブル、地図、ルート候補をまとめて確認できます。",
       },
       plan: {
-        title: "マイプラン | SYNCHRONICITY'26",
+        title: "マイプラン | SYNC'26",
         description: "分岐ルート、徒歩時間、書き出し用の内容をまとめて確認できます。",
       },
       map: {
-        title: "会場マップ | SYNCHRONICITY'26",
+        title: "会場マップ | SYNC'26",
         description: "会場位置と現在のルートを地図で確認できます。",
       },
       timetable: {
-        title: "タイムテーブル | SYNCHRONICITY'26",
+        title: "タイムテーブル | SYNC'26",
         description: "時間と会場ごとに全公演を見ながら、観たい公演を保存できます。",
       },
     },
   },
   nav: {
     home: "ホーム",
-    browse: "一覧",
+    browse: "タイムテーブル",
     plan: "ルート",
     map: "地図",
   },
   home: {
-    subtitle: "SYNCHRONICITY'26",
+    subtitle: "SYNC'26",
     title: "Route Planner",
     tagline: "タイムテーブル、地図、ルートをひとまとめに。",
     cards: {
-      browse: "全体を見る",
+      browse: "全タイムテーブル",
       plan: "ルートを組む",
       map: "地図を見る",
     },
@@ -103,6 +103,8 @@ const ja = {
     exportPng: "PNGを書き出す",
     exportAppleRoute: "Apple Mapsを書き出す",
     exportGoogleRoute: "Google Mapsを書き出す",
+    syncFavorites: "選択をお気に入りに同期",
+    syncFavoritesConfirm: "この日のお気に入りを現在のルートに置き換えます。続行しますか？",
     exportHint: "上に地図ルート、下に自分のタイムテーブルを並べます。",
     timelineTitle: "マイタイムテーブル",
     routeDetailsTitle: "移動の内訳",

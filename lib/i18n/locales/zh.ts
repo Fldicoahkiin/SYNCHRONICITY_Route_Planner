@@ -1,33 +1,33 @@
 const zh = {
   meta: {
-    title: "SYNCHRONICITY'26 行程规划",
+    title: "SYNC'26 行程规划",
     description: "查看时间表、场地地图和你保存的路线。",
     pages: {
       home: {
-        title: "SYNCHRONICITY'26 行程规划",
+        title: "SYNC'26 行程规划",
         description: "从首页进入时间表、路线和地图。",
       },
       browse: {
-        title: "浏览全景 | SYNCHRONICITY'26",
+        title: "时间表 | SYNC'26",
         description: "按日期查看时间表、地图和路线建议。",
       },
       plan: {
-        title: "我的行程 | SYNCHRONICITY'26",
+        title: "我的行程 | SYNC'26",
         description: "查看冲突分支、步行时间，并导出当前路线。",
       },
       map: {
-        title: "场地地图 | SYNCHRONICITY'26",
+        title: "场地地图 | SYNC'26",
         description: "在地图上查看场地位置和你当前选中的路线。",
       },
       timetable: {
-        title: "时间表 | SYNCHRONICITY'26",
+        title: "时间表 | SYNC'26",
         description: "按场地和时间浏览全部演出，并直接收藏想看的场次。",
       },
     },
   },
   nav: {
     home: "首页",
-    browse: "浏览",
+    browse: "时间表",
     plan: "路线",
     map: "地图",
   },
@@ -36,7 +36,7 @@ const zh = {
     title: "行程规划",
     tagline: "时间表、地图和路线放在一起看。",
     cards: {
-      browse: "浏览全景",
+      browse: "完整时间表",
       plan: "规划路线",
       map: "查看地图",
     },
@@ -91,7 +91,7 @@ const zh = {
     },
   },
   browse: {
-    title: "浏览",
+    title: "时间表",
     goToPlanHint: "查看已保存场次的路线",
     mapLoading: "地图加载中…",
     routeEmpty: "还没有规划路线",
@@ -103,6 +103,8 @@ const zh = {
     exportPng: "导出 PNG",
     exportAppleRoute: "导出 Apple Maps",
     exportGoogleRoute: "导出 Google Maps",
+    syncFavorites: "将选择同步到收藏",
+    syncFavoritesConfirm: "这将用当前路线替换当天的收藏。是否继续？",
     exportHint: "上面是地图路线，下面是你选中的时间轴。",
     timelineTitle: "我的时间表",
     routeDetailsTitle: "转场说明",

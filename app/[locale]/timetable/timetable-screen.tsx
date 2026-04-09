@@ -8,10 +8,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Heart, MapPin, Search, X } from "lucide-react";
+import { Heart, MapPin, Search, Trash2, X } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
-import { usePersistentState } from "@/lib/hooks/use-persistent-state";
+import { useFavorites } from "@/lib/hooks/use-favorites";
 import { formatTime } from "@/lib/utils/route-planner";
 import { ImportFromImageButton } from "@/components/import-from-image";
 import { TimetableBoard } from "@/components/timetable-board";
@@ -28,10 +28,7 @@ export default function TimetablePage({
 }) {
   const { t } = useTranslation();
   const [day, setDay] = useDay();
-  const [favorites, setFavorites] = usePersistentState<Record<string, boolean>>(
-    "synchronicity-favorites",
-    {},
-  );
+  const { favorites, favoriteIds, toggleFavorite, clearFavorites } = useFavorites();
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
@@ -81,14 +78,7 @@ export default function TimetablePage({
     });
   }, [daySets, favorites, query, resolvedVenueId, showFavoritesOnly]);
 
-  const favoriteIds = useMemo(
-    () => new Set(Object.entries(favorites).filter(([, value]) => value).map(([id]) => id)),
-    [favorites],
-  );
-
-  const toggleFavorite = (id: string) => {
-    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  // favoriteIds and toggleFavorite now come from useFavorites hook
 
   return (
     <div className="flex min-h-full flex-col bg-background">
@@ -105,17 +95,20 @@ export default function TimetablePage({
                 </h1>
               </div>
               <div className="flex items-center gap-2">
-                <ImportFromImageButton
-                  onImportAction={(ids) => {
-                    setFavorites((prev) => {
-                      const next = { ...prev };
-                      ids.forEach((id) => {
-                        next[id] = true;
-                      });
-                      return next;
-                    });
+                <ImportFromImageButton onDayChange={setDay} />
+                <button
+                  onClick={() => {
+                    if (window.confirm(t("timetable.clearConfirm") || "Clear all favorites?")) {
+                      clearFavorites();
+                      setShowFavoritesOnly(false);
+                    }
                   }}
-                />
+                  disabled={favoriteIds.size === 0}
+                  className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-600 disabled:opacity-50"
+                  title={t("timetable.clearFavorites")}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
                 <button
                   onClick={() => setShowFavoritesOnly((value) => !value)}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
@@ -125,7 +118,7 @@ export default function TimetablePage({
                   }`}
                 >
                   <Heart className={`h-4 w-4 ${showFavoritesOnly ? "fill-current" : ""}`} />
-                  {t("timetable.favoritesOnly")}
+                  <span className="hidden sm:inline">{t("timetable.favoritesOnly")}</span>
                 </button>
               </div>
             </div>
@@ -223,6 +216,7 @@ export default function TimetablePage({
               sets={visibleSets}
               frameSets={daySets}
               selectedIds={favoriteIds}
+              compactLayout={showFavoritesOnly && query === ""}
               onSelectSet={setSelectedSet}
               onToggleFavorite={toggleFavorite}
             />

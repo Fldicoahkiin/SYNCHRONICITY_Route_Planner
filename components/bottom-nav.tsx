@@ -4,20 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/client";
 import type { Locale } from "@/lib/i18n/settings";
-import { CalendarDays, Map, Route } from "lucide-react";
+import { CalendarDays, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
 type TabDef = {
   path: string;
-  labelKey: "nav.browse" | "nav.map" | "nav.plan";
+  labelKey: "nav.browse" | "nav.plan";
   icon: typeof CalendarDays;
 };
 
 const tabs: TabDef[] = [
   { path: "browse", labelKey: "nav.browse", icon: CalendarDays },
   { path: "plan", labelKey: "nav.plan", icon: Route },
-  { path: "map", labelKey: "nav.map", icon: Map },
 ];
 
 export function BottomNav() {
@@ -27,9 +26,9 @@ export function BottomNav() {
 
   return (
     <>
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav – tabs only, no language switcher */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-800 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-3">
+        <div className="mx-auto flex items-center justify-center gap-6 px-4 py-1.5">
           {tabs.map((tab) => {
             const href = tab.path ? `/${locale}/${tab.path}` : `/${locale}`;
             const active = tab.path
@@ -41,20 +40,17 @@ export function BottomNav() {
                 key={tab.path}
                 href={href}
                 className={cn(
-                  "flex min-w-0 flex-col items-center gap-1 px-1 py-3 text-[11px] font-medium transition-colors",
-                  active ? "text-cyan-400" : "text-zinc-400 hover:text-zinc-200"
+                  "flex flex-col items-center gap-0.5 rounded-lg px-4 py-1.5 text-[11px] font-medium transition-colors",
+                  active
+                    ? "text-cyan-400"
+                    : "text-zinc-400 hover:text-zinc-200",
                 )}
               >
                 <Icon className="h-5 w-5" />
-                <span className="truncate">{t(tab.labelKey)}</span>
+                <span>{t(tab.labelKey)}</span>
               </Link>
             );
           })}
-        </div>
-        <div className="border-t border-zinc-900 px-3 py-1.5">
-          <div className="mx-auto max-w-md">
-            <LocaleSwitcher />
-          </div>
         </div>
         <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
