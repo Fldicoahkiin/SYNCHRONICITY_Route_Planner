@@ -1,5 +1,8 @@
 import { venueMap } from "@/lib/data/venues";
 import type { RouteLeg, RouteTravelOverride } from "@/lib/utils/route-planner";
+import routesCacheData from "@/lib/data/routes-cache.json";
+
+const routesCache = routesCacheData as Record<string, { minutes: number; distanceMeters: number; geometry: [number, number][] }>;
 
 const ROUTING_TIMEOUT_MS = 8000;
 
@@ -31,6 +34,17 @@ export async function fetchWalkingRoute(
 
   if (!fromVenue || !toVenue) {
     throw new Error("Missing venue coordinates");
+  }
+
+  const pairKey = getVenuePairKey(fromVenueId, toVenueId);
+  const cachedRoute = routesCache[pairKey];
+  if (cachedRoute) {
+    return {
+      minutes: cachedRoute.minutes,
+      distanceMeters: cachedRoute.distanceMeters,
+      geometry: cachedRoute.geometry,
+      source: "local-cache"
+    };
   }
 
   const controller = new AbortController();

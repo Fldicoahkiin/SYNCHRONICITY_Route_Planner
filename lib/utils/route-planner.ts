@@ -1,7 +1,7 @@
 import { getWalkMinutes } from "@/lib/data/walking-matrix";
 import type { TimetableSet } from "@/lib/data/timetable";
 
-export type TravelSource = "same-venue" | "route-api" | "matrix";
+export type TravelSource = "same-venue" | "route-api" | "matrix" | "local-cache";
 
 type RouteStatus = "comfortable" | "just-right" | "tight" | "impossible";
 type ConflictSelectionInput = Record<string, string[]>;
