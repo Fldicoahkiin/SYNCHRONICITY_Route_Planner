@@ -9,13 +9,11 @@ import { planRoute } from "@/lib/utils/route-planner";
 export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
   const {
     groupSelections,
-    focusedBranchId,
     selectedCount,
     toggleOption,
     setGroupSelection,
     selectAllInGroup,
     clearGroup,
-    setFocusedBranch,
     syncWithRoute,
     resetDay,
     isHydrated,
@@ -28,9 +26,8 @@ export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
         day,
         {},
         groupSelections,
-        focusedBranchId,
       ),
-    [favorites, day, groupSelections, focusedBranchId],
+    [favorites, day, groupSelections],
   );
 
   useEffect(() => {
@@ -38,15 +35,14 @@ export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
       return;
     }
 
-    syncWithRoute(baseRoute.conflictGroups, baseRoute.focusedBranchId || null);
+    syncWithRoute(baseRoute.conflictGroups);
   }, [
     baseRoute.conflictGroups,
-    baseRoute.focusedBranchId,
     isHydrated,
     syncWithRoute,
   ]);
 
-  const { overrides, isLoading, hasRouteApiError } = useRouteDirections(baseRoute.focusedBranch);
+  const { overrides, isLoading, hasRouteApiError } = useRouteDirections(baseRoute);
 
   const hasOverrides = Object.keys(overrides).length > 0;
 
@@ -59,30 +55,27 @@ export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
       day,
       overrides,
       groupSelections,
-      focusedBranchId,
     );
-  }, [baseRoute, favorites, day, hasOverrides, overrides, groupSelections, focusedBranchId]);
+  }, [baseRoute, favorites, day, hasOverrides, overrides, groupSelections]);
 
   useEffect(() => {
     if (!isHydrated) {
       return;
     }
 
-    syncWithRoute(route.conflictGroups, route.focusedBranchId || null);
-  }, [route.conflictGroups, route.focusedBranchId, isHydrated, syncWithRoute]);
+    syncWithRoute(route.conflictGroups);
+  }, [route.conflictGroups, isHydrated, syncWithRoute]);
 
   return {
     route,
     isLoadingDirections: isLoading,
     hasRouteApiError,
     groupSelections,
-    focusedBranchId,
     selectedCount,
     toggleOption,
     setGroupSelection,
     selectAllInGroup,
     clearGroup,
-    setFocusedBranch,
     syncWithRoute,
     resetDay,
     isHydrated,

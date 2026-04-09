@@ -4,7 +4,6 @@ import type { TimetableSet } from "@/lib/data/timetable";
 export type TravelSource = "same-venue" | "route-api" | "matrix";
 
 type RouteStatus = "comfortable" | "just-right" | "tight" | "impossible";
-type ConflictChoice = Record<string, string | null>;
 type ConflictSelectionInput = Record<string, string[]>;
 
 export interface RouteTravelOverride {
@@ -67,21 +66,10 @@ interface RouteSummary {
   comfortableLegs: number;
 }
 
-export interface PlannedRouteBranch extends RouteSummary {
-  id: string;
-  performanceIds: string[];
-  conflictSelections: ConflictChoice;
-}
-
 export interface PlannedRoute extends RouteSummary {
   conflictGroups: ConflictGroup[];
-  branches: PlannedRouteBranch[];
-  focusedBranchId: string;
-  focusedBranch?: PlannedRouteBranch;
-  branchOverflow: boolean;
 }
 
-const DEFAULT_BRANCH_ID = "branch-default";
 const EMPTY_PREVIEW: ConflictTransferPreview = { kind: "none" };
 
 export function getRouteLegKey(currentSetId: string, nextSetId: string): string {
@@ -93,8 +81,6 @@ export function planRoute(
   day: 1 | 2,
   travelOverrides: Record<string, RouteTravelOverride> = {},
   conflictSelections: ConflictSelectionInput = {},
-  focusedBranchId: string | null = null,
-  maxBranches = 6,
 ): PlannedRoute {
   const sets = favorites
     .filter((set) => set.day === day)
@@ -139,60 +125,21 @@ export function planRoute(
 
   const groupedPerformanceIds = new Set(groupIdByPerformance.keys());
   const nonConflictSets = sets.filter((set) => !groupedPerformanceIds.has(set.id));
-  const { branchChoices, branchOverflow } = buildBranchChoices(
-    conflictGroups,
-    maxBranches,
-  );
 
-  const branches = branchChoices.map((choice) => {
-    const branchSets = [
-      ...nonConflictSets,
-      ...conflictGroups
-        .map((group) => {
-          const performanceId = choice[group.id];
-          return performanceId
-            ? group.performances.find((performance) => performance.id === performanceId)
-            : undefined;
-        })
-        .filter((performance): performance is TimetableSet => Boolean(performance)),
-    ].sort(compareSets);
-
-    const branchId = getBranchId(choice, conflictGroups);
-    return {
-      id: branchId,
-      performanceIds: branchSets.map((set) => set.id),
-      conflictSelections: choice,
-      ...summarizeRoute(day, branchSets, travelOverrides),
-    } satisfies PlannedRouteBranch;
-  });
-
-  const focusedBranch = branches.find((branch) => branch.id === focusedBranchId) ?? branches[0];
-
-  if (!focusedBranch) {
-    return {
-      day,
-      legs: [],
-      totalSets: 0,
-      impossibleLegs: 0,
-      averageBuffer: 0,
-      tightLegs: 0,
-      justRightLegs: 0,
-      comfortableLegs: 0,
-      conflictGroups,
-      branches: [],
-      focusedBranchId: "",
-      focusedBranch: undefined,
-      branchOverflow,
-    };
-  }
+  const selectedSets = [
+    ...nonConflictSets,
+    ...conflictGroups
+      .flatMap((group) => {
+        const selectedIds = getNormalizedSelection(group, conflictSelections[group.id]);
+        return selectedIds
+          .map((id) => group.performances.find((p) => p.id === id))
+          .filter((p): p is TimetableSet => Boolean(p));
+      }),
+  ].sort(compareSets);
 
   return {
-    ...focusedBranch,
+    ...summarizeRoute(day, selectedSets, travelOverrides),
     conflictGroups,
-    branches,
-    focusedBranchId: focusedBranch.id,
-    focusedBranch,
-    branchOverflow,
   };
 }
 
@@ -316,54 +263,6 @@ function summarizeRoute(
     tightLegs,
     justRightLegs,
     comfortableLegs,
-  };
-}
-
-function buildBranchChoices(
-  conflictGroups: ConflictGroup[],
-  maxBranches: number,
-): { branchChoices: ConflictChoice[]; branchOverflow: boolean } {
-  if (conflictGroups.length === 0) {
-    return {
-      branchChoices: [{}],
-      branchOverflow: false,
-    };
-  }
-
-  const branchChoices: ConflictChoice[] = [];
-  let branchOverflow = false;
-
-  function walk(index: number, currentChoice: ConflictChoice) {
-    if (branchOverflow) {
-      return;
-    }
-
-    if (index >= conflictGroups.length) {
-      branchChoices.push({ ...currentChoice });
-      if (branchChoices.length > maxBranches) {
-        branchChoices.pop();
-        branchOverflow = true;
-      }
-      return;
-    }
-
-    const group = conflictGroups[index];
-    const candidates = group.selectedPerformanceIds.length > 0 ? group.selectedPerformanceIds : [null];
-
-    for (const performanceId of candidates) {
-      currentChoice[group.id] = performanceId;
-      walk(index + 1, currentChoice);
-      if (branchOverflow) {
-        return;
-      }
-    }
-  }
-
-  walk(0, {});
-
-  return {
-    branchChoices,
-    branchOverflow,
   };
 }
 
@@ -527,16 +426,6 @@ function getNormalizedSelection(
 
 function getConflictGroupId(performanceIds: string[]): string {
   return `conflict:${performanceIds.join("-")}`;
-}
-
-function getBranchId(choice: ConflictChoice, conflictGroups: ConflictGroup[]): string {
-  if (conflictGroups.length === 0) {
-    return DEFAULT_BRANCH_ID;
-  }
-
-  return conflictGroups
-    .map((group) => `${group.id}:${choice[group.id] ?? "skip"}`)
-    .join("|");
 }
 
 function compareSets(a: TimetableSet, b: TimetableSet): number {

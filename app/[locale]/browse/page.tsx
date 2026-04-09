@@ -14,6 +14,10 @@ export async function generateMetadata({
   return getPageMetadata(locale as Locale, "browse");
 }
 
+const displayTimetable = timetable.filter(
+  (set) => !set.artistName.includes("Talk Live"),
+);
+
 export default function BrowsePage() {
-  return <BrowsePageClient timetableSets={timetable} venuesList={venues} />;
+  return <BrowsePageClient timetableSets={displayTimetable} venuesList={venues} />;
 }

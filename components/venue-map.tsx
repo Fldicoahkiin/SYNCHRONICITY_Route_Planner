@@ -64,11 +64,9 @@ function MapBounds({ points }: { points: LatLngExpression[] }) {
 
 export default function VenueMap({
   favorites,
-  daySets,
   routeLegs,
 }: {
   favorites: TimetableSet[];
-  daySets?: TimetableSet[];
   routeLegs?: RouteLeg[];
 }) {
   const { t } = useTranslation();
@@ -152,11 +150,9 @@ export default function VenueMap({
       {venues.map((v) => {
         const routeIndex = routeVenueIds.indexOf(v.id);
         const isOnRoute = routeIndex !== -1;
-        const popupSets = daySets
-          ? daySets
-              .filter((s) => s.venueId === v.id)
-              .sort((a, b) => a.startAt - b.startAt)
-          : sortedFavorites.filter((s) => s.venueId === v.id);
+        const popupSets = sortedFavorites
+          .filter((s) => s.venueId === v.id)
+          .sort((a, b) => a.startAt - b.startAt);
 
         return (
           <Marker

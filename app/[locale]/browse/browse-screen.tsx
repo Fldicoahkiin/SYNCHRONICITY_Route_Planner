@@ -96,8 +96,8 @@ function VenueFilterRow({
   const { t } = useTranslation();
 
   return (
-    <div className="-mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-      <div className="flex w-min gap-2 md:w-full">
+    <div className="-mx-4 px-4 pb-2 md:mx-0 md:px-0">
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={onReset}
           className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${

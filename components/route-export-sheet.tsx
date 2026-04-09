@@ -2,9 +2,7 @@
 
 import { forwardRef, useMemo } from "react";
 import type { PlannedRoute } from "@/lib/utils/route-planner";
-import type { TimetableSet } from "@/lib/data/timetable";
 import { useTranslation } from "@/lib/i18n/client";
-import GoogleMapsEmbed from "@/components/google-maps-embed";
 import { BufferTimeline } from "@/components/buffer-timeline";
 import { AlertTriangle } from "lucide-react";
 
@@ -12,10 +10,9 @@ export const RouteExportSheet = forwardRef<
   HTMLDivElement,
   {
     route: PlannedRoute;
-    frameSets: TimetableSet[];
     dayLabel: string;
   }
->(function RouteExportSheet({ route, frameSets, dayLabel }, ref) {
+>(function RouteExportSheet({ route, dayLabel }, ref) {
   const { t } = useTranslation();
 
   const stats = useMemo(() => {
@@ -103,17 +100,6 @@ export const RouteExportSheet = forwardRef<
             {t("plan.leg.bufferTime")}
           </div>
           <div className="mt-1 text-lg font-bold text-emerald-300">{stats.totalBuffer}m</div>
-        </div>
-      </div>
-
-      <div className="mt-4 overflow-hidden rounded-[28px] border border-zinc-800">
-        <div className="h-[320px] w-full bg-zinc-950">
-          <GoogleMapsEmbed
-            favorites={route.legs.map((leg) => leg.set)}
-            daySets={frameSets}
-            routeLegs={route.legs}
-            className="h-full"
-          />
         </div>
       </div>
 

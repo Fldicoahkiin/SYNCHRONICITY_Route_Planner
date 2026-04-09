@@ -5,12 +5,10 @@ import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 interface StoredConflictSelectionState {
   groupSelections: Record<string, string[]>;
-  focusedBranchId: string | null;
 }
 
 const EMPTY_STATE: StoredConflictSelectionState = {
   groupSelections: {},
-  focusedBranchId: null,
 };
 
 const STORAGE_EVENT = "synchronicity:conflict-selection-changed";
@@ -57,7 +55,7 @@ export function useConflictSelection(day: 1 | 2) {
   }, [day, storageKey]);
 
   const syncWithRoute = useCallback(
-    (groups: ConflictGroup[], nextFocusedBranchId: string | null) => {
+    (groups: ConflictGroup[]) => {
       updateState((prev) => {
         const nextGroupSelections: Record<string, string[]> = {};
 
@@ -74,7 +72,6 @@ export function useConflictSelection(day: 1 | 2) {
 
         const nextState: StoredConflictSelectionState = {
           groupSelections: nextGroupSelections,
-          focusedBranchId: nextFocusedBranchId,
         };
 
         return shallowEqualState(prev, nextState) ? prev : nextState;
@@ -119,13 +116,6 @@ export function useConflictSelection(day: 1 | 2) {
     setGroupSelection(groupId, []);
   }, [setGroupSelection]);
 
-  const setFocusedBranch = useCallback((branchId: string) => {
-    updateState((prev) => ({
-      ...prev,
-      focusedBranchId: branchId,
-    }));
-  }, [updateState]);
-
   const resetDay = useCallback(() => {
     writeStoredConflictSelection(storageKey, EMPTY_STATE);
   }, [storageKey]);
@@ -137,13 +127,11 @@ export function useConflictSelection(day: 1 | 2) {
 
   return {
     groupSelections: state.groupSelections,
-    focusedBranchId: state.focusedBranchId,
     selectedCount,
     toggleOption,
     setGroupSelection,
     selectAllInGroup,
     clearGroup,
-    setFocusedBranch,
     syncWithRoute,
     resetDay,
     isHydrated: typeof window !== "undefined",
@@ -174,8 +162,6 @@ function readStoredConflictSelection(
     const parsed = JSON.parse(stored) as Partial<StoredConflictSelectionState>;
     const nextState = {
       groupSelections: normalizeGroupSelections(parsed.groupSelections),
-      focusedBranchId:
-        typeof parsed.focusedBranchId === "string" ? parsed.focusedBranchId : null,
     };
     storageSnapshotCache.set(storageKey, { raw: stored, state: nextState });
     return nextState;
@@ -217,10 +203,6 @@ function shallowEqualState(
   left: StoredConflictSelectionState,
   right: StoredConflictSelectionState,
 ) {
-  if (left.focusedBranchId !== right.focusedBranchId) {
-    return false;
-  }
-
   const leftKeys = Object.keys(left.groupSelections);
   const rightKeys = Object.keys(right.groupSelections);
 

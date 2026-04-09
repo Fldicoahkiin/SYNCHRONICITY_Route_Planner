@@ -60,9 +60,7 @@ export default function MapPage({
     toggleOption,
     selectAllInGroup,
     clearGroup,
-    setFocusedBranch,
     isLoadingDirections,
-    hasRouteApiError,
   } = usePlannedRoute(favoriteSets, dayNum);
   const exportStops = useMemo(() => getRouteExportStops(route.legs), [route.legs]);
   const googleRouteUrl = useMemo(
@@ -83,7 +81,7 @@ export default function MapPage({
             <h1 className="text-lg font-semibold tracking-tight md:text-[1.7rem]">
               {t("map.title")}
             </h1>
-            <span className="text-xs text-zinc-400 md:text-sm">
+            <span className="text-xs text-zinc-400 md:text-sm" suppressHydrationWarning>
               {t("map.selectedCount", { count: dayFavoriteSets.length })}
             </span>
           </div>
@@ -103,7 +101,7 @@ export default function MapPage({
       </header>
 
       <div className="relative flex-1 pt-[104px]">
-        <VenueMap favorites={dayFavoriteSets} daySets={daySets} routeLegs={route.legs} />
+        <VenueMap favorites={dayFavoriteSets} routeLegs={route.legs} />
 
         {route.totalSets > 0 ? (
           <div
@@ -145,9 +143,7 @@ export default function MapPage({
                     onToggleOption={toggleOption}
                     onSelectAllInGroup={selectAllInGroup}
                     onClearGroup={clearGroup}
-                    onFocusBranch={setFocusedBranch}
                     isLoadingDirections={isLoadingDirections}
-                    hasRouteApiError={hasRouteApiError}
                   />
                 </div>
               ) : null}

@@ -13,6 +13,10 @@ export async function generateMetadata({
   return getPageMetadata(locale as Locale, "plan");
 }
 
+const displayTimetable = timetable.filter(
+  (set) => !set.artistName.includes("Talk Live"),
+);
+
 export default function PlanPage() {
-  return <PlanPageClient timetableSets={timetable} />;
+  return <PlanPageClient timetableSets={displayTimetable} />;
 }

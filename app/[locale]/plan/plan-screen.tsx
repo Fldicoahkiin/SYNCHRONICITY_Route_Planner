@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { toPng } from "html-to-image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,6 +22,15 @@ import type { Locale } from "@/lib/i18n/settings";
 import type { TimetableSet } from "@/lib/data/timetable";
 import { cn } from "@/lib/utils";
 import { Check, Copy, Download, ExternalLink, Share2 } from "lucide-react";
+
+const VenueMap = dynamic(() => import("@/components/venue-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-zinc-900 text-sm text-zinc-400">
+      Loading map…
+    </div>
+  ),
+});
 
 export default function PlanPage({
   timetableSets,
@@ -44,18 +54,12 @@ export default function PlanPage({
   );
 
   const dayNum = day === "1" ? 1 : 2;
-  const daySets = useMemo(
-    () => timetableSets.filter((set) => set.day === dayNum),
-    [timetableSets, dayNum],
-  );
   const {
     route,
     toggleOption,
     selectAllInGroup,
     clearGroup,
-    setFocusedBranch,
     isLoadingDirections,
-    hasRouteApiError,
   } = usePlannedRoute(favoriteSets, dayNum);
   const score = useMemo(() => calculateScore(route, t), [route, t]);
   const dayLabel = day === "1" ? t("plan.tabs.day1") : t("plan.tabs.day2");
@@ -259,14 +263,21 @@ export default function PlanPage({
               </CardContent>
             </Card>
 
+            <div className="overflow-hidden rounded-3xl border border-zinc-800">
+              <div className="h-[320px] w-full bg-zinc-900">
+                <VenueMap
+                  favorites={route.legs.map((leg) => leg.set)}
+                  routeLegs={route.legs}
+                />
+              </div>
+            </div>
+
             <RoutePlannerPanel
               route={route}
               onToggleOption={toggleOption}
               onSelectAllInGroup={selectAllInGroup}
               onClearGroup={clearGroup}
-              onFocusBranch={setFocusedBranch}
               isLoadingDirections={isLoadingDirections}
-              hasRouteApiError={hasRouteApiError}
             />
           </>
         )}
@@ -276,7 +287,6 @@ export default function PlanPage({
         <RouteExportSheet
           ref={exportSheetRef}
           route={route}
-          frameSets={daySets}
           dayLabel={dayLabel}
         />
       </div>

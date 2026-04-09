@@ -1,18 +1,12 @@
 import { venueMap } from "@/lib/data/venues";
 import type { RouteLeg, RouteTravelOverride } from "@/lib/utils/route-planner";
 
-const OSRM_BASE_URL = "https://router.project-osrm.org/route/v1/foot";
-const ROUTING_TIMEOUT_MS = 6500;
+const ROUTING_TIMEOUT_MS = 8000;
 
-interface OsrmRouteResponse {
-  code: string;
-  routes?: Array<{
-    distance: number;
-    duration: number;
-    geometry?: {
-      coordinates: Array<[number, number]>;
-    };
-  }>;
+interface WalkingRouteResponse {
+  minutes: number;
+  distanceMeters: number;
+  geometry: [number, number][];
 }
 
 export function getVenuePairKey(fromVenueId: string, toVenueId: string): string {
@@ -43,33 +37,29 @@ export async function fetchWalkingRoute(
   const timeoutId = window.setTimeout(() => controller.abort(), ROUTING_TIMEOUT_MS);
 
   try {
-    const response = await fetch(
-      `${OSRM_BASE_URL}/${fromVenue.lng},${fromVenue.lat};${toVenue.lng},${toVenue.lat}?overview=full&geometries=geojson&steps=false`,
-      {
-        signal: controller.signal,
-        headers: {
-          Accept: "application/json",
-        },
+    const response = await fetch("/api/walking-route", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        fromVenueId,
+        toVenueId,
+      }),
+      signal: controller.signal,
+    });
 
     if (!response.ok) {
-      throw new Error(`Routing request failed with ${response.status}`);
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(payload.error || `Routing request failed with ${response.status}`);
     }
 
-    const payload = (await response.json()) as OsrmRouteResponse;
-    const route = payload.routes?.[0];
-
-    if (payload.code !== "Ok" || !route) {
-      throw new Error("Routing API returned no route");
-    }
+    const payload = (await response.json()) as WalkingRouteResponse;
 
     return {
-      minutes: Math.max(1, Math.round(route.duration / 60)),
-      distanceMeters: Math.round(route.distance),
-      geometry:
-        route.geometry?.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]) ??
-        [],
+      minutes: payload.minutes,
+      distanceMeters: payload.distanceMeters,
+      geometry: payload.geometry,
       source: "route-api",
     };
   } finally {

@@ -16,9 +16,6 @@ function buildRoute(overrides: Partial<PlannedRoute>): PlannedRoute {
     justRightLegs: 0,
     comfortableLegs: 0,
     conflictGroups: [],
-    branches: [],
-    focusedBranchId: "",
-    branchOverflow: false,
     ...overrides,
   };
 }

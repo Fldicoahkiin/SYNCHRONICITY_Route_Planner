@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/lib/i18n/client";
 import type { PlannedRoute } from "@/lib/utils/route-planner";
 import { ConflictGroupSelector } from "@/components/conflict-group-selector";
-import { RouteBranchSelector } from "@/components/route-branch-selector";
 import { RouteLegList } from "@/components/route-leg-list";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, LoaderCircle } from "lucide-react";
@@ -15,9 +14,7 @@ interface RoutePlannerPanelProps {
   onToggleOption: (groupId: string, performanceId: string) => void;
   onSelectAllInGroup: (groupId: string, performanceIds: string[]) => void;
   onClearGroup: (groupId: string) => void;
-  onFocusBranch: (branchId: string) => void;
   isLoadingDirections?: boolean;
-  hasRouteApiError?: boolean;
   className?: string;
 }
 
@@ -26,9 +23,7 @@ export const RoutePlannerPanel = memo(function RoutePlannerPanel({
   onToggleOption,
   onSelectAllInGroup,
   onClearGroup,
-  onFocusBranch,
   isLoadingDirections = false,
-  hasRouteApiError = false,
   className,
 }: RoutePlannerPanelProps) {
   const { t } = useTranslation();
@@ -36,38 +31,19 @@ export const RoutePlannerPanel = memo(function RoutePlannerPanel({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <RouteBranchSelector
-        branches={route.branches}
-        conflictGroups={route.conflictGroups}
-        focusedBranchId={route.focusedBranchId}
-        branchOverflow={route.branchOverflow}
-        onFocusBranch={onFocusBranch}
-      />
-
       {route.conflictGroups.length > 0 ? (
-        <div className="space-y-3">
-          {route.conflictGroups.map((group) => (
-            <ConflictGroupSelector
-              key={group.id}
-              group={group}
-              onToggle={onToggleOption}
-              onSelectAll={onSelectAllInGroup}
-              onClearAll={onClearGroup}
-            />
-          ))}
-        </div>
+        <ConflictGroupSelector
+          groups={route.conflictGroups}
+          onToggle={onToggleOption}
+          onSelectAll={onSelectAllInGroup}
+          onClearAll={onClearGroup}
+        />
       ) : null}
 
       {isLoadingDirections ? (
         <div className="flex items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-xs text-zinc-400">
           <LoaderCircle className="h-4 w-4 animate-spin text-cyan-400" />
           {t("plan.routeLoading")}
-        </div>
-      ) : null}
-
-      {hasRouteApiError ? (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-xs text-zinc-400">
-          {t("plan.routeApiWarning")}
         </div>
       ) : null}
 
