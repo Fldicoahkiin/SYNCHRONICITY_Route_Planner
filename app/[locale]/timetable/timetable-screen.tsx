@@ -21,6 +21,7 @@ export default function TimetablePage() {
   );
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
   const [selectedSet, setSelectedSet] = useState<TimetableSet | null>(null);
 
   const dayNum = day === "1" ? 1 : 2;
@@ -28,10 +29,25 @@ export default function TimetablePage() {
     () => timetable.filter((set) => set.day === dayNum),
     [dayNum],
   );
+  const dayVenues = useMemo(
+    () =>
+      Array.from(new Set(daySets.map((set) => set.venueId || "").filter(Boolean)))
+        .map((venueId) => venueMap.get(venueId))
+        .filter((venue): venue is NonNullable<typeof venue> => Boolean(venue)),
+    [daySets],
+  );
+  const resolvedVenueId =
+    activeVenueId && daySets.some((set) => set.venueId === activeVenueId)
+      ? activeVenueId
+      : null;
   const visibleSets = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return daySets.filter((set) => {
+      if (resolvedVenueId && set.venueId !== resolvedVenueId) {
+        return false;
+      }
+
       if (showFavoritesOnly && !favorites[set.id]) {
         return false;
       }
@@ -45,7 +61,7 @@ export default function TimetablePage() {
         set.stageName.toLowerCase().includes(normalizedQuery)
       );
     });
-  }, [daySets, favorites, query, showFavoritesOnly]);
+  }, [daySets, favorites, query, resolvedVenueId, showFavoritesOnly]);
 
   const favoriteIds = useMemo(
     () => new Set(Object.entries(favorites).filter(([, value]) => value).map(([id]) => id)),
@@ -149,39 +165,47 @@ export default function TimetablePage() {
           <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-2">
             <div className="flex gap-2 w-min md:w-full">
               <button
-                onClick={() => setQuery("")}
+                onClick={() => {
+                  setQuery("");
+                  setActiveVenueId(null);
+                }}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                  query === ""
+                  query === "" && resolvedVenueId === null
                     ? "bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50"
                     : "border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                All
+                {t("timetable.filterAll")}
               </button>
-              {Array.from(
-                new Set(daySets.map((set) => set.venueId || "").filter(Boolean))
-              )
-                .map((venueId) => venueMap.get(venueId))
-                .filter(Boolean)
-                .map((venue) => (
+              {dayVenues.map((venue) => (
                   <button
-                    key={venue?.id}
-                    onClick={() => setQuery("")}
-                    className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all border"
+                    key={venue.id}
+                    onClick={() => setActiveVenueId(venue.id)}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                      resolvedVenueId === venue.id ? "ring-1" : ""
+                    }`}
                     style={{
-                      borderColor: `${venue?.color}40`,
-                      backgroundColor: `${venue?.color}15`,
-                      color: venue?.color,
+                      borderColor: `${venue.color}${resolvedVenueId === venue.id ? "aa" : "40"}`,
+                      backgroundColor: `${venue.color}${resolvedVenueId === venue.id ? "22" : "15"}`,
+                      color: venue.color,
+                      boxShadow:
+                        resolvedVenueId === venue.id
+                          ? `0 0 0 1px ${venue.color}55 inset`
+                          : undefined,
                     }}
                   >
-                    {venue?.name.split(" ").pop()}
+                    {venue.name.split(" ").pop()}
                   </button>
                 ))}
             </div>
           </div>
 
           <div className="flex items-center justify-between text-xs text-zinc-500">
-            <span>{showFavoritesOnly ? t("timetable.favoritesOnly") : t("map.routeSets", { count: visibleSets.length })}</span>
+            <span>
+              {showFavoritesOnly
+                ? t("timetable.favoritesOnly")
+                : t("timetable.resultCount", { count: visibleSets.length })}
+            </span>
             <span>{visibleSets.length} / {daySets.length}</span>
           </div>
 
@@ -227,7 +251,10 @@ export default function TimetablePage() {
                       <span>{venueMap.get(selectedSet.venueId || "")?.name ?? selectedSet.stageName}</span>
                     </div>
                   </div>
-                  <Modal.CloseTrigger className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 text-zinc-400">
+                  <Modal.CloseTrigger
+                    aria-label={t("common.close")}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 text-zinc-400"
+                  >
                     <X className="h-4 w-4" />
                   </Modal.CloseTrigger>
                 </div>

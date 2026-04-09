@@ -56,7 +56,7 @@ export interface ConflictGroup {
   optionPreviews: ConflictOptionPreview[];
 }
 
-export interface RouteSummary {
+interface RouteSummary {
   day: 1 | 2;
   legs: RouteLeg[];
   totalSets: number;

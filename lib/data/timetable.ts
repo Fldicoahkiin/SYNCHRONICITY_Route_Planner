@@ -1728,6 +1728,3 @@ export const timetable: TimetableSet[] = [
     "finishAt": 1775997000
   }
 ];
-
-export const day1Timetable = timetable.filter((t) => t.day === 1);
-export const day2Timetable = timetable.filter((t) => t.day === 2);

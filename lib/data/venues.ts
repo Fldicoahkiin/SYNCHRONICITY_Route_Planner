@@ -122,4 +122,3 @@ export const venues: Venue[] = [
 ];
 
 export const venueMap = new Map(venues.map((v) => [v.id, v]));
-export const spotToVenueId = new Map(venues.map((v) => [v.spotId, v.id]));

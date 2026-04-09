@@ -11,7 +11,7 @@ import { useDay } from "@/lib/hooks/use-day";
 import { usePlannedRoute } from "@/lib/hooks/use-planned-route";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { timetable } from "@/lib/data/timetable";
-import { venueMap } from "@/lib/data/venues";
+import { venueMap, type Venue } from "@/lib/data/venues";
 import { calculateScore } from "@/lib/utils/scoring";
 import { buildAppleMapsRouteUrl, buildGoogleMapsRouteUrl } from "@/lib/utils/map-urls";
 import { getRouteExportStops } from "@/lib/utils/routing";
@@ -31,9 +31,11 @@ import {
 } from "lucide-react";
 
 function MapLoading() {
+  const { t } = useTranslation();
+
   return (
     <div className="flex h-full w-full items-center justify-center bg-zinc-900 text-sm text-zinc-400">
-      地图加载中…
+      {t("browse.mapLoading")}
     </div>
   );
 }
@@ -42,6 +44,135 @@ const VenueMap = dynamic(() => import("@/components/venue-map"), {
   ssr: false,
   loading: () => <MapLoading />,
 });
+
+function BrowsePageHeader({
+  day,
+  query,
+  onDayChange,
+  onQueryChange,
+  onQueryClear,
+  onImportAction,
+}: {
+  day: "1" | "2";
+  query: string;
+  onDayChange: (day: "1" | "2") => void;
+  onQueryChange: (value: string) => void;
+  onQueryClear: () => void;
+  onImportAction: (ids: string[]) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-[#050505]/92 px-4 py-3 backdrop-blur-md md:px-6 md:py-4">
+      <div className="mx-auto max-w-md md:max-w-7xl">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
+              SYNCHRONICITY&apos;26
+            </div>
+            <h1 className="mt-1 text-xl font-semibold tracking-tight text-zinc-50 md:text-[1.8rem]">
+              {t("browse.title")}
+            </h1>
+          </div>
+          <ImportFromImageButton onImportAction={onImportAction} />
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-[18rem_minmax(0,1fr)] md:items-center">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-1">
+            <button
+              className={`h-9 rounded-xl text-sm font-medium transition-colors ${
+                day === "1" ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
+              }`}
+              onClick={() => onDayChange("1")}
+            >
+              {t("plan.tabs.day1")}
+            </button>
+            <button
+              className={`h-9 rounded-xl text-sm font-medium transition-colors ${
+                day === "2" ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
+              }`}
+              onClick={() => onDayChange("2")}
+            >
+              {t("plan.tabs.day2")}
+            </button>
+          </div>
+
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <Input
+              value={query}
+              onChange={(event) => onQueryChange(event.target.value)}
+              placeholder={t("timetable.searchPlaceholder")}
+              className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 pl-9 pr-10 text-zinc-200"
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={onQueryClear}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function VenueFilterRow({
+  venues,
+  query,
+  activeVenueId,
+  onReset,
+  onSelectVenue,
+}: {
+  venues: Venue[];
+  query: string;
+  activeVenueId: string | null;
+  onReset: () => void;
+  onSelectVenue: (venueId: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="-mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+      <div className="flex w-min gap-2 md:w-full">
+        <button
+          onClick={onReset}
+          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+            query === "" && activeVenueId === null
+              ? "bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50"
+              : "border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
+          }`}
+        >
+          {t("timetable.filterAll")}
+        </button>
+        {venues.map((venue) => (
+          <button
+            key={venue.id}
+            onClick={() => onSelectVenue(venue.id)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+              activeVenueId === venue.id ? "ring-1" : ""
+            }`}
+            style={{
+              borderColor: `${venue.color}${activeVenueId === venue.id ? "aa" : "40"}`,
+              backgroundColor: `${venue.color}${activeVenueId === venue.id ? "22" : "15"}`,
+              color: venue.color,
+              boxShadow:
+                activeVenueId === venue.id
+                  ? `0 0 0 1px ${venue.color}55 inset`
+                  : undefined,
+            }}
+          >
+            {venue.name.split(" ").pop()}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function BrowsePage() {
   const pathname = usePathname();
@@ -53,6 +184,7 @@ export default function BrowsePage() {
   );
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
 
   const dayNum = day === "1" ? 1 : 2;
 
@@ -64,11 +196,26 @@ export default function BrowsePage() {
     () => timetable.filter((set) => set.day === dayNum),
     [dayNum],
   );
+  const dayVenues = useMemo(
+    () =>
+      Array.from(new Set(daySets.map((set) => set.venueId || "").filter(Boolean)))
+        .map((venueId) => venueMap.get(venueId))
+        .filter((venue): venue is NonNullable<typeof venue> => Boolean(venue)),
+    [daySets],
+  );
+  const resolvedVenueId =
+    activeVenueId && daySets.some((set) => set.venueId === activeVenueId)
+      ? activeVenueId
+      : null;
 
   const visibleSets = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return daySets.filter((set) => {
+      if (resolvedVenueId && set.venueId !== resolvedVenueId) {
+        return false;
+      }
+
       if (showFavoritesOnly && !favorites[set.id]) {
         return false;
       }
@@ -82,7 +229,7 @@ export default function BrowsePage() {
         set.stageName.toLowerCase().includes(normalizedQuery)
       );
     });
-  }, [daySets, favorites, query, showFavoritesOnly]);
+  }, [daySets, favorites, query, resolvedVenueId, showFavoritesOnly]);
 
   const favoriteSets = useMemo(
     () => timetable.filter((set) => favorites[set.id]),
@@ -110,125 +257,55 @@ export default function BrowsePage() {
 
   return (
     <div className="flex min-h-full flex-col bg-[#050505]">
-      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-[#050505]/92 px-4 py-3 backdrop-blur-md md:px-6 md:py-4">
-        <div className="mx-auto max-w-md md:max-w-7xl">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                SYNCHRONICITY&apos;26
-              </div>
-              <h1 className="mt-1 text-xl font-semibold tracking-tight text-zinc-50 md:text-[1.8rem]">
-                浏览
-              </h1>
-            </div>
-            <ImportFromImageButton
-              onImportAction={(ids) => {
-                setFavorites((prev) => {
-                  const next = { ...prev };
-                  ids.forEach((id) => {
-                    next[id] = true;
-                  });
-                  return next;
-                });
-              }}
-            />
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-[18rem_minmax(0,1fr)] md:items-center">
-            <div className="grid grid-cols-2 gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-1">
-              <button
-                className={`h-9 rounded-xl text-sm font-medium transition-colors ${
-                  day === "1" ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
-                }`}
-                onClick={() => setDay("1")}
-              >
-                {t("plan.tabs.day1")}
-              </button>
-              <button
-                className={`h-9 rounded-xl text-sm font-medium transition-colors ${
-                  day === "2" ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
-                }`}
-                onClick={() => setDay("2")}
-              >
-                {t("plan.tabs.day2")}
-              </button>
-            </div>
-
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={t("timetable.searchPlaceholder")}
-                className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 pl-9 pr-10 text-zinc-200"
-              />
-              {query ? (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </header>
+      <BrowsePageHeader
+        day={day}
+        query={query}
+        onDayChange={setDay}
+        onQueryChange={setQuery}
+        onQueryClear={() => setQuery("")}
+        onImportAction={(ids) => {
+          setFavorites((prev) => {
+            const next = { ...prev };
+            ids.forEach((id) => {
+              next[id] = true;
+            });
+            return next;
+          });
+        }}
+      />
 
       <main className="flex-1 px-4 py-4 md:px-6 md:py-6">
         <div className="mx-auto max-w-md md:max-w-7xl">
           <Tabs defaultValue="timetable" className="w-full">
             <TabsList className="grid w-full grid-cols-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-1">
-              <TabsTrigger value="timetable" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300">
+              <TabsTrigger value="timetable" className="flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 sm:flex-row sm:gap-2 sm:text-sm">
                 <CalendarDays className="h-4 w-4" />
-                <span className="hidden sm:inline">时间表</span>
+                <span>{t("browse.tabs.timetable")}</span>
               </TabsTrigger>
-              <TabsTrigger value="map" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-300">
+              <TabsTrigger value="map" className="flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-300 sm:flex-row sm:gap-2 sm:text-sm">
                 <Map className="h-4 w-4" />
-                <span className="hidden sm:inline">地图</span>
+                <span>{t("browse.tabs.map")}</span>
               </TabsTrigger>
-              <TabsTrigger value="route" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300">
+              <TabsTrigger value="route" className="flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300 sm:flex-row sm:gap-2 sm:text-sm">
                 <Route className="h-4 w-4" />
-                <span className="hidden sm:inline">路线</span>
+                <span>{t("browse.tabs.route")}</span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="timetable" className="mt-4 space-y-4">
-              <div className="-mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-                <div className="flex w-min gap-2 md:w-full">
-                  <button
-                    onClick={() => setQuery("")}
-                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                      query === ""
-                        ? "bg-cyan-500/30 text-cyan-300 ring-1 ring-cyan-500/50"
-                        : "border border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200"
-                    }`}
-                  >
-                    全部
-                  </button>
-                  {Array.from(new Set(daySets.map((set) => set.venueId || "").filter(Boolean)))
-                    .map((venueId) => venueMap.get(venueId))
-                    .filter(Boolean)
-                    .map((venue) => (
-                      <button
-                        key={venue?.id}
-                        onClick={() => setQuery("")}
-                        className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all"
-                        style={{
-                          borderColor: `${venue?.color}40`,
-                          backgroundColor: `${venue?.color}15`,
-                          color: venue?.color,
-                        }}
-                      >
-                        {venue?.name.split(" ").pop()}
-                      </button>
-                    ))}
-                </div>
-              </div>
+              <VenueFilterRow
+                venues={dayVenues}
+                query={query}
+                activeVenueId={resolvedVenueId}
+                onReset={() => {
+                  setQuery("");
+                  setActiveVenueId(null);
+                }}
+                onSelectVenue={setActiveVenueId}
+              />
 
               <div className="flex items-center justify-between text-xs text-zinc-500">
-                <span>{visibleSets.length} 场演出</span>
+                <span>{t("timetable.resultCount", { count: visibleSets.length })}</span>
                 <button
                   onClick={() => setShowFavoritesOnly((value) => !value)}
                   className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
@@ -238,13 +315,17 @@ export default function BrowsePage() {
                   }`}
                 >
                   <Heart className={`h-3.5 w-3.5 ${showFavoritesOnly ? "fill-current" : ""}`} />
-                  收藏
+                  {t("timetable.favoritesOnly")}
                 </button>
               </div>
 
               {visibleSets.length === 0 ? (
                 <div className="rounded-[28px] border border-zinc-800 bg-zinc-950/70 px-5 py-12 text-center text-sm text-zinc-400">
-                  {query.trim() ? "没有找到匹配的演出" : "还没有选择任何演出"}
+                  {query.trim()
+                    ? t("timetable.noResults")
+                    : showFavoritesOnly
+                      ? t("timetable.empty")
+                      : t("browse.emptySelection")}
                 </div>
               ) : (
                 <TimetableBoard
@@ -296,12 +377,12 @@ export default function BrowsePage() {
             <TabsContent value="route" className="mt-4 space-y-4">
               {route.totalSets === 0 ? (
                 <div className="rounded-[28px] border border-zinc-800 bg-zinc-950/70 px-5 py-12 text-center text-sm text-zinc-400">
-                  <p>还没有规划路线</p>
+                  <p>{t("browse.routeEmpty")}</p>
                   <Link
                     href={`/${locale}/browse`}
                     className="mt-4 inline-flex items-center gap-1 rounded-lg bg-cyan-500/10 px-4 py-2 text-xs font-medium text-cyan-400 transition-colors hover:bg-cyan-500/20"
                   >
-                    选择演出
+                    {t("browse.selectSets")}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>

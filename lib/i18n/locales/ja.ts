@@ -54,6 +54,8 @@ const ja = {
     title: "タイムテーブル",
     boardHint: "会場ごとの列で、時間順に確認できます。",
     favoritesOnly: "お気に入り",
+    filterAll: "すべて",
+    resultCount: "{{count}} 本",
     areaA: "Aエリア",
     areaB: "Bエリア",
     areaOther: "その他",
@@ -87,6 +89,18 @@ const ja = {
       cancel: "キャンセル",
       conflictWarning: "この組み合わせは時間が重なっています：",
     },
+  },
+  browse: {
+    title: "一覧",
+    tabs: {
+      timetable: "タイムテーブル",
+      map: "地図",
+      route: "ルート",
+    },
+    mapLoading: "地図を読み込み中…",
+    routeEmpty: "まだルートは組まれていません。",
+    selectSets: "公演を選ぶ",
+    emptySelection: "まだ公演が選ばれていません。",
   },
   plan: {
     title: "マイプラン",
@@ -195,6 +209,9 @@ const ja = {
     ja: "日本語",
     zh: "中文",
     en: "English",
+  },
+  common: {
+    close: "閉じる",
   },
 };
 

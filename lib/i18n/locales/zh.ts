@@ -54,6 +54,8 @@ const zh = {
     title: "时间表",
     boardHint: "按场地列展开，纵向按时间查看。",
     favoritesOnly: "仅收藏",
+    filterAll: "全部",
+    resultCount: "{{count}} 场演出",
     areaA: "A 区",
     areaB: "B 区",
     areaOther: "其他",
@@ -87,6 +89,18 @@ const zh = {
       cancel: "取消",
       conflictWarning: "这些场次时间撞了：",
     },
+  },
+  browse: {
+    title: "浏览",
+    tabs: {
+      timetable: "时间表",
+      map: "地图",
+      route: "路线",
+    },
+    mapLoading: "地图加载中…",
+    routeEmpty: "还没有规划路线",
+    selectSets: "选择演出",
+    emptySelection: "还没有选择任何演出",
   },
   plan: {
     title: "我的行程",
@@ -195,6 +209,9 @@ const zh = {
     ja: "日本語",
     zh: "中文",
     en: "English",
+  },
+  common: {
+    close: "关闭",
   },
 };
 

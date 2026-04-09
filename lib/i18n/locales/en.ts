@@ -54,6 +54,8 @@ const en = {
     title: "Timetable",
     boardHint: "Browse by venue columns and time.",
     favoritesOnly: "Favorites",
+    filterAll: "All",
+    resultCount: "{{count}} sets",
     areaA: "Area A",
     areaB: "Area B",
     areaOther: "Other",
@@ -87,6 +89,18 @@ const en = {
       cancel: "Cancel",
       conflictWarning: "These sets overlap:",
     },
+  },
+  browse: {
+    title: "Browse",
+    tabs: {
+      timetable: "Timetable",
+      map: "Map",
+      route: "Route",
+    },
+    mapLoading: "Loading map…",
+    routeEmpty: "No route planned yet.",
+    selectSets: "Pick some sets",
+    emptySelection: "No sets selected yet.",
   },
   plan: {
     title: "My Plan",
@@ -195,6 +209,9 @@ const en = {
     ja: "日本語",
     zh: "中文",
     en: "English",
+  },
+  common: {
+    close: "Close",
   },
 };
 

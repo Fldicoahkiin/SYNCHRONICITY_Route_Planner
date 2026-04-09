@@ -286,12 +286,10 @@ export function BufferTimeline({ legs, className }: BufferTimelineProps) {
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-2 w-2 rounded-full bg-rose-500" />
-            <span className="text-zinc-400">Impossible</span>
+            <span className="text-zinc-400">{t("score.shadowClone")}</span>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-export default BufferTimeline;

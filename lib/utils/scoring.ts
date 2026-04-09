@@ -1,11 +1,6 @@
 import type { TFunction } from "i18next";
 import type { PlannedRoute } from "./route-planner";
 
-export type ScoreBadge =
-  | "relaxed"
-  | "master"
-  | "shadowClone";
-
 export interface ScoreResult {
   badge: string;
   color: "green" | "yellow" | "red";

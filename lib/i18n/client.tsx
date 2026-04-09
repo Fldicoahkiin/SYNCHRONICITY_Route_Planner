@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 import { resources } from "./locales";
 import { defaultLocale, type Locale } from "./settings";
 
-export function initI18nClient(lng: Locale) {
+function initI18nClient(lng: Locale) {
   const instance = i18next.createInstance();
   instance.use(initReactI18next).init({
     lng,
