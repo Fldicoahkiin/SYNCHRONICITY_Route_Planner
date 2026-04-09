@@ -44,17 +44,17 @@ const REGION_PROFILES = [
   { minSaturation: 0.34, minLuma: 0.28, minChannel: 60 },
   { minSaturation: 0.25, minLuma: 0.18, minChannel: 50 },
   { minSaturation: 0.15, minLuma: 0.10, minChannel: 40 },
+  { minSaturation: 0.08, minLuma: 0.08, minChannel: 30 },
+  { minSaturation: 0.02, minLuma: 0.05, minChannel: 20 },
+  { minSaturation: 0.00, minLuma: 0.04, minChannel: 15 },
 ];
-const MIN_REGION_COUNT = 6;
-const MAX_REGION_COUNT = 24;
+const MAX_REGION_COUNT = 150;
 const REGION_PADDING = 8;
 const REGION_TARGET_WIDTH = 920;
 const TIME_HINT_WINDOW_MINUTES = 20;
 const ESTIMATED_TIME_WINDOW_MINUTES = 24;
-const CONFIDENT_MATCH_SCORE = 78;
-const CONFIDENT_MATCH_GAP = 10;
-const DIRECT_REGION_MATCH_MIN_SCORE = 60;
-const DIRECT_REGION_MATCH_GAP = 8;
+const CONFIDENT_MATCH_SCORE = 65;
+const CONFIDENT_MATCH_GAP = 8;
 const REGION_MERGE_OVERLAP_RATIO = 0.18;
 const TOKYO_TIME_FORMATTER = new Intl.DateTimeFormat("ja-JP", {
   timeZone: "Asia/Tokyo",
@@ -82,16 +82,37 @@ const STAGE_ALIAS_OVERRIDES: Record<string, string[]> = {
 
 const ARTIST_ALIAS_OVERRIDES: Record<string, string[]> = {
   kurayamisaka: ["kurayamisa ka", "kurayamisa"],
-  "mudy on the 昨晩": ["mudy on the sakuban", "muddy on the sakuban"],
-  "サニーデイ・サービス": ["Sunny Day Service"],
+  "mudy on the 昨晩": ["mudy on the sakuban", "muddy on the sakuban", "muddy on the"],
+  "サニーデイ・サービス": ["Sunny Day Service", "sunnydayservice"],
   "渋さ知らズオーケストラ": [
     "Shibusashirazu-Orchestra",
     "Shibusashirazu Orchestra",
+    "shibusashirazu",
   ],
-  "揺れるは幽霊": ["yureruwayureru", "yureruwayurel"],
-  "神聖かまってちゃん": ["Shinsei Kamattechan"],
+  "揺れるは幽霊": ["yureruwayurei", "yureruwayureru", "yureruwayurel"],
+  "神聖かまってちゃん": ["Shinsei Kamattechan", "shinseikamattechan"],
   ひとひら: ["hitohira"],
   雪国: ["Yukiguni"],
+  "水中スピカ": ["Suichu Spica", "suichuspica"],
+  "歌うこと、つくること、続けていくこと さらさ×エバンズ亜莉沙": ["sarasa", "Evans Arisa", "sarasaevans"],
+  "MONO NO AWARE": ["monoaware", "mono no aware"],
+  "Mega Shinnosuke": ["megashinnosuke", "mega shinnosuk"],
+  "Ko Umehara": ["koumehara", "ko umehara"],
+  "ハク。": ["haku"],
+  "Jeremy Quartus": ["jeremyquartus"],
+  "NIKO NIKO TAN TAN": ["nikonikotan", "nikonikotantan"],
+  chilldspot: ["chilldspot"],
+  "fox capture plan": ["foxcaptureplan"],
+  "The Novembers": ["thenovembers"],
+  JYOCHO: ["jyocho"],
+  "world's end girlfriend": ["worlds end girlfriend", "worldsendgirlfriend"],
+  "Blume popo": ["blumepopo", "blume popo"],
+  tricot: ["tricot"],
+  "No Buses": ["nobuses"],
+  PEDRO: ["pedro"],
+  lüv: ["luv"],
+  Homecomings: ["homecomings", "homecom"],
+  ヒトリエ: ["hitorie"],
 };
 
 // Import the dynamically fetched API data to augment the overrides with Romaji
@@ -423,7 +444,7 @@ function getArtistSimilarity(
     }
   }
 
-  return best >= 0.55 ? best : 0;
+  return best >= 0.45 ? best : 0;
 }
 
 function filterSetsForDay(
@@ -485,6 +506,13 @@ function rankSetCandidates(
         set.artistName,
       );
       score += artistSimilarity * 60;
+
+      // Boost exact matches heavily so they bypass minimum threshold even without stage/time hints
+      if (artistSimilarity >= 0.98) {
+        score += 100;
+      } else if (artistSimilarity >= 0.85) {
+        score += 40;
+      }
 
       if (artistSimilarity >= 0.92 && stageHint && set.stageName === stageHint.stageName) {
         score += 15;
@@ -609,50 +637,20 @@ function extractRegionDirectMatches(
   preferredDay: 1 | 2 | null,
 ): MatchResult[] {
   const matched = new Map<string, MatchResult>();
-  const estimateTime = buildTimeEstimator(regions);
 
   for (const region of regions) {
-    const estimatedTime =
-      region.timeHint === null ? estimateTime?.(region.region.y) ?? null : null;
-    const ranked = rankSetCandidates(region, preferredDay, estimatedTime);
-
-    if (hasConfidentWinner(ranked)) {
-      continue;
-    }
-
     const lineMatches = extractMatches(region.text);
     if (lineMatches.length === 0) {
       continue;
     }
 
-    const candidateArtists = new Set(lineMatches.map((match) => match.artistName));
-    const candidateRanked = ranked.filter((item) =>
-      candidateArtists.has(item.set.artistName),
-    );
-
-    const top = candidateRanked[0];
-    const second = candidateRanked[1];
-    const hasClearWinner =
-      !!top &&
-      top.score >= DIRECT_REGION_MATCH_MIN_SCORE &&
-      (!second || top.score - second.score >= DIRECT_REGION_MATCH_GAP);
-
-    if (!hasClearWinner || !top) {
-      continue;
+    for (const match of lineMatches) {
+      matched.set(match.artistName, {
+        artistName: match.artistName,
+        sets: filterSetsForDay(match.sets, preferredDay),
+        rawLine: match.rawLine,
+      });
     }
-
-    const rawLine =
-      lineMatches.find((match) => match.artistName === top.set.artistName)?.rawLine ??
-      region.text.replace(/\n+/g, " / ");
-
-    matched.set(top.set.artistName, {
-      artistName: top.set.artistName,
-      sets: filterSetsForDay(
-        timetable.filter((set) => set.artistName === top.set.artistName),
-        preferredDay,
-      ),
-      rawLine,
-    });
   }
 
   return Array.from(matched.values()).filter((match) => match.sets.length > 0);
@@ -680,47 +678,51 @@ export function extractMatches(ocrText: string): MatchResult[] {
 
   const matched = new Map<string, MatchResult>();
 
-  for (const line of lines) {
-    const normalizedLine = normalizeMatchText(line);
-    if (!normalizedLine) {
-      continue;
-    }
+  for (let i = 0; i < lines.length; i++) {
+    for (let len = 1; len <= 3 && i + len <= lines.length; len++) {
+      const line = lines.slice(i, i + len).join(" ");
+      
+      const normalizedLine = normalizeMatchText(line);
+      if (!normalizedLine) {
+        continue;
+      }
 
-    const compactLine = normalizedLine.replace(/\s+/g, "");
-    const looksLikeMetadata =
-      /^\d{1,2}[:.]\d{2}/.test(line) ||
-      /^[A-Z\s]+$/.test(line) ||
-      compactLine.length <= 2;
+      const compactLine = normalizedLine.replace(/\s+/g, "");
+      const looksLikeMetadata =
+        /^\d{1,2}[:.]\d{2}/.test(line) ||
+        /^[A-Z\s]+$/.test(line) ||
+        compactLine.length <= 2;
 
-    const preparedSearchText = prepareArtistSearchText(line, findStageHint(line));
-    const rankedArtists = artistCandidates
-      .map((candidate) => ({
-        candidate,
-        score: getArtistSimilarity(preparedSearchText, candidate.name),
-      }))
-      .filter((item) => item.score >= (looksLikeMetadata ? 0.96 : 0.82))
-      .sort((left, right) => {
-        if (right.score !== left.score) {
-          return right.score - left.score;
-        }
+      const preparedSearchText = prepareArtistSearchText(line, findStageHint(line));
+      const rankedArtists = artistCandidates
+        .map((candidate) => ({
+          candidate,
+          score: getArtistSimilarity(preparedSearchText, candidate.name),
+        }))
+        .filter((item) => item.score >= (looksLikeMetadata ? 0.96 : 0.82))
+        .sort((left, right) => {
+          if (right.score !== left.score) {
+            return right.score - left.score;
+          }
 
-        return right.candidate.compact.length - left.candidate.compact.length;
-      });
-
-    const top = rankedArtists[0];
-    const second = rankedArtists[1];
-    const hasClearWinner =
-      !!top &&
-      (!second || top.score - second.score >= 0.08 || top.score >= 0.96);
-
-    if (hasClearWinner && top && !matched.has(top.candidate.name)) {
-      const sets = timetable.filter((set) => set.artistName === top.candidate.name);
-      if (sets.length > 0) {
-        matched.set(top.candidate.name, {
-          artistName: top.candidate.name,
-          sets,
-          rawLine: line,
+          return right.candidate.compact.length - left.candidate.compact.length;
         });
+
+      const top = rankedArtists[0];
+      const second = rankedArtists[1];
+      const hasClearWinner =
+        !!top &&
+        (!second || top.score - second.score >= 0.08 || top.score >= 0.96);
+
+      if (hasClearWinner && top && !matched.has(top.candidate.name)) {
+        const sets = timetable.filter((set) => set.artistName === top.candidate.name);
+        if (sets.length > 0) {
+          matched.set(top.candidate.name, {
+            artistName: top.candidate.name,
+            sets,
+            rawLine: line,
+          });
+        }
       }
     }
   }
@@ -1046,7 +1048,7 @@ function detectRegionsWithProfile(
   const { data } = context.getImageData(0, 0, sampleWidth, sampleHeight);
   const mask = new Uint8Array(sampleWidth * sampleHeight);
   const visited = new Uint8Array(sampleWidth * sampleHeight);
-  const headerCutoff = Math.floor(sampleHeight * 0.12);
+  const headerCutoff = 0;
   const regions: Rect[] = [];
   const neighbors = [
     [-1, -1],
@@ -1159,6 +1161,7 @@ function detectRegionsWithProfile(
 
 function detectSetRegions(image: HTMLImageElement): Rect[] {
   let fallback: Rect[] = [];
+  const MIN_REGION_COUNT = 6;
 
   for (const profile of REGION_PROFILES) {
     const regions = detectRegionsWithProfile(image, profile);
@@ -1204,16 +1207,25 @@ function preprocessCrop(
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
   const { data } = imageData;
 
-  for (let index = 0; index < data.length; index += 4) {
-    data[index] = Math.min(255, Math.max(0, (data[index] - 128) * 1.14 + 134));
-    data[index + 1] = Math.min(
-      255,
-      Math.max(0, (data[index + 1] - 128) * 1.14 + 134),
-    );
-    data[index + 2] = Math.min(
-      255,
-      Math.max(0, (data[index + 2] - 128) * 1.14 + 134),
-    );
+  // Extreme binarization for standard digital images with white text on colored blocks
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    
+    // Check if pixel is very bright (close to white). Official images have pure white #ffffff text
+    if (r > 200 && g > 200 && b > 200) {
+      // It's white text! Turn it entirely black for Tesseract
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+    } else {
+      // It's background! Turn it entirely white to maximize contrast
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+    }
+    data[i + 3] = 255;
   }
 
   context.putImageData(imageData, 0, 0);
@@ -1236,7 +1248,64 @@ async function createOCRWorker(
   };
 
   const { createWorker } = await import("tesseract.js");
-  return createWorker("eng", undefined, { logger });
+  try {
+    return await createWorker("eng+jpn", undefined, { logger });
+  } catch {
+    console.warn("Failed to load jpn traineddata, falling back to eng only.");
+    return createWorker("eng", undefined, { logger });
+  }
+}
+
+async function recognizeFullImage(
+  worker: Worker,
+  image: HTMLImageElement,
+  progressState: OCRProgressState,
+  onProgress?: (progress: number) => void,
+): Promise<string> {
+  const scale = Math.min(1, REGION_TARGET_WIDTH / image.naturalWidth);
+  const canvas = createCanvas(
+    Math.round(image.naturalWidth * scale),
+    Math.round(image.naturalHeight * scale),
+  );
+  const context = canvas.getContext("2d");
+  if (!context) return "";
+
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const { data } = imageData;
+
+  // Extreme binarization for standard digital images with white text on colored blocks
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    
+    // Check if pixel is very bright (close to white). Official images have pure white text
+    if (r > 200 && g > 200 && b > 200) {
+      // Turn white text black for Tesseract
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+    } else {
+      // Turn background pure white
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+    }
+    data[i + 3] = 255;
+  }
+
+  context.putImageData(imageData, 0, 0);
+  const dataUrl = canvas.toDataURL("image/png");
+  const {
+    data: { text },
+  } = await worker.recognize(dataUrl);
+  progressState.completedJobs += 1;
+  onProgress?.(Math.min(1, progressState.completedJobs / progressState.totalJobs));
+
+  return sanitizeBlockText(text);
 }
 
 async function recognizeRegions(
@@ -1297,22 +1366,41 @@ function buildMatchResults(
     }
   }
 
-  return Array.from(
-    matchedSets.reduce<Map<string, MatchResult>>((map, set) => {
-      const existing = map.get(set.artistName);
-      if (existing) {
-        existing.sets.push(set);
-        return map;
-      }
+  const map = new Map<string, MatchResult>();
 
+  for (const set of matchedSets) {
+    const existing = map.get(set.artistName);
+    if (existing) {
+      existing.sets.push(set);
+    } else {
       map.set(set.artistName, {
         artistName: set.artistName,
         sets: [set],
         rawLine: rawLineByArtist.get(set.artistName) ?? set.artistName,
       });
-      return map;
-    }, new Map()).values(),
-  ).sort((left, right) => left.sets[0].startAt - right.sets[0].startAt);
+    }
+  }
+
+  for (const match of directMatches) {
+    const existing = map.get(match.artistName);
+    if (existing) {
+      for (const set of match.sets) {
+        if (!existing.sets.some((s) => s.id === set.id)) {
+          existing.sets.push(set);
+        }
+      }
+    } else {
+      map.set(match.artistName, {
+        artistName: match.artistName,
+        sets: [...match.sets],
+        rawLine: rawLineByArtist.get(match.artistName) ?? match.rawLine,
+      });
+    }
+  }
+
+  return Array.from(map.values()).sort(
+    (left, right) => left.sets[0].startAt - right.sets[0].startAt,
+  );
 }
 
 export async function runOCR(
@@ -1327,13 +1415,10 @@ export async function runOCR(
   const image = await loadImageElement(imageUrl);
   const regions = detectSetRegions(image);
 
-  if (regions.length === 0) {
-    return { text: "", day: null, matches: [] };
-  }
-
+  const FULL_IMAGE_JOB_COUNT = 1;
   const progressState: OCRProgressState = {
     completedJobs: 0,
-    totalJobs: regions.length,
+    totalJobs: regions.length + FULL_IMAGE_JOB_COUNT,
   };
   const worker = await createOCRWorker(progressState, onProgress);
   const tesseractModule = await import("tesseract.js");
@@ -1351,19 +1436,39 @@ export async function runOCR(
       progressState,
       onProgress,
     );
+    const fullText = await recognizeFullImage(
+      worker,
+      image,
+      progressState,
+      onProgress,
+    );
 
-    const combinedText = recognizedRegions.map((region) => region.text).join("\n\n");
+    const combinedText = [...recognizedRegions.map((region) => region.text), fullText]
+      .filter(Boolean)
+      .join("\n\n");
     const inferredDay = detectDay(combinedText) ?? inferDayFromRegions(recognizedRegions);
-    const directMatches = extractRegionDirectMatches(
+
+    // Direct matches from both region crops and full image
+    const regionDirectMatches = extractRegionDirectMatches(
       recognizedRegions,
       inferredDay,
     );
+    const fullDirectMatches = extractMatches(fullText);
+    const directMatchMap = new Map<string, MatchResult>();
+    for (const match of regionDirectMatches) directMatchMap.set(match.artistName, match);
+    for (const match of fullDirectMatches) {
+      if (!directMatchMap.has(match.artistName)) {
+        directMatchMap.set(match.artistName, match);
+      }
+    }
+    const mergedDirectMatches = Array.from(directMatchMap.values());
+
     const preliminaryMatchedSets = Array.from(
       new Map(
         [
           ...pickMatchedSets(recognizedRegions, inferredDay),
           ...extractStructuredSetMatches(recognizedRegions, inferredDay),
-          ...directMatches.flatMap((match) => filterSetsForDay(match.sets, inferredDay)),
+          ...mergedDirectMatches.flatMap((match) => filterSetsForDay(match.sets, inferredDay)),
         ].map((set) => [set.id, set]),
       ).values(),
     ).sort((left, right) => left.startAt - right.startAt);
@@ -1378,7 +1483,7 @@ export async function runOCR(
         return day1Count > day2Count ? 1 : 2;
       })();
     const matchedSets = filterSetsForDay(preliminaryMatchedSets, dayFromMatches);
-    const filteredDirectMatches = directMatches
+    const filteredDirectMatches = mergedDirectMatches
       .map((match) => ({
         ...match,
         sets: filterSetsForDay(match.sets, dayFromMatches),
