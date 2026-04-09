@@ -92,6 +92,33 @@ const ARTIST_ALIAS_OVERRIDES: Record<string, string[]> = {
   雪国: ["Yukiguni"],
 };
 
+// Import the dynamically fetched API data to augment the overrides with Romaji
+import allArtistsData from "@/data/2026/all-artists.json";
+
+function extractRomajiAliases(phoneticName: string | null): string[] {
+  if (!phoneticName) return [];
+  // Match contiguous ASCII letters, numbers, and basic punctuation
+  // e.g., "Yanushiやぬし" -> "Yanushi", "fox capture planふぉっくす..." -> "fox capture plan"
+  const matches = phoneticName.match(/[A-Za-z0-9\s.\-]+/g) ?? [];
+  return matches
+    .map((s) => s.trim())
+    .filter((s) => s.length > 2); // Ignore single characters or stray spaces
+}
+
+for (const node of allArtistsData.data) {
+  const name = node.attributes?.name;
+  const phonetic = node.attributes?.phonetic_name;
+  if (name && phonetic) {
+    const romajiAliases = extractRomajiAliases(phonetic);
+    if (romajiAliases.length > 0) {
+      if (!ARTIST_ALIAS_OVERRIDES[name]) {
+        ARTIST_ALIAS_OVERRIDES[name] = [];
+      }
+      ARTIST_ALIAS_OVERRIDES[name].push(...romajiAliases);
+    }
+  }
+}
+
 const artistNames = Array.from(new Set(timetable.map((set) => set.artistName)));
 const normalizedArtistNameMap = new Map(
   artistNames.map((name) => [normalizeMatchText(name), name]),

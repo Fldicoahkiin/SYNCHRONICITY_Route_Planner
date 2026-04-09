@@ -12,6 +12,50 @@ export interface TimetableSet {
 
 export const timetable: TimetableSet[] = [
   {
+    "id": "5003",
+    "artistId": "140",
+    "artistName": "ena mori (Philippines / Japan)",
+    "stageId": "25",
+    "stageName": "duo MUSIC EXCHANGE",
+    "venueId": "duo",
+    "day": 2,
+    "startAt": 1775813400,
+    "finishAt": 1775815500
+  },
+  {
+    "id": "5001",
+    "artistId": "107",
+    "artistName": "FCO.",
+    "stageId": "25",
+    "stageName": "duo MUSIC EXCHANGE",
+    "venueId": "duo",
+    "day": 2,
+    "startAt": 1775816700,
+    "finishAt": 1775818800
+  },
+  {
+    "id": "5002",
+    "artistId": "139",
+    "artistName": "Adult DVD (United Kingdom)",
+    "stageId": "25",
+    "stageName": "duo MUSIC EXCHANGE",
+    "venueId": "duo",
+    "day": 2,
+    "startAt": 1775820000,
+    "finishAt": 1775822100
+  },
+  {
+    "id": "5000",
+    "artistId": "9",
+    "artistName": "toconoma",
+    "stageId": "25",
+    "stageName": "duo MUSIC EXCHANGE",
+    "venueId": "duo",
+    "day": 2,
+    "startAt": 1775823300,
+    "finishAt": 1775825400
+  },
+  {
     "id": "131",
     "artistId": "131",
     "artistName": "Ko Umehara",
@@ -21,17 +65,6 @@ export const timetable: TimetableSet[] = [
     "day": 1,
     "startAt": 1775880000,
     "finishAt": 1775883000
-  },
-  {
-    "id": "155",
-    "artistId": "155",
-    "artistName": "Talk Live ＆ Rest Space",
-    "stageId": "23",
-    "stageName": "O-EAST 3F LOBBY",
-    "venueId": "o-east",
-    "day": 1,
-    "startAt": 1775880000,
-    "finishAt": 1775908800
   },
   {
     "id": "154",
@@ -93,7 +126,7 @@ export const timetable: TimetableSet[] = [
     "artistId": "121",
     "artistName": "soraya",
     "stageId": "22",
-    "stageName": "7thFLOOOR",
+    "stageName": "7thFLOOR",
     "venueId": "7thfloor",
     "day": 1,
     "startAt": 1775882700,
@@ -243,6 +276,17 @@ export const timetable: TimetableSet[] = [
     "finishAt": 1775889300
   },
   {
+    "id": "301",
+    "artistId": "301",
+    "artistName": "歌うこと、つくること、続けていくこと\n\nさらさ × エバンズ亜莉沙",
+    "stageId": "23",
+    "stageName": "O-EAST 3F LOBBY",
+    "venueId": "o-east",
+    "day": 1,
+    "startAt": 1775887200,
+    "finishAt": 1775889000
+  },
+  {
     "id": "58",
     "artistId": "58",
     "artistName": "Mega Shinnosuke",
@@ -269,7 +313,7 @@ export const timetable: TimetableSet[] = [
     "artistId": "130",
     "artistName": "Meg Bonus",
     "stageId": "22",
-    "stageName": "7thFLOOOR",
+    "stageName": "7thFLOOR",
     "venueId": "7thfloor",
     "day": 1,
     "startAt": 1775887500,
@@ -434,7 +478,7 @@ export const timetable: TimetableSet[] = [
     "artistId": "81",
     "artistName": "皆川溺集合体",
     "stageId": "22",
-    "stageName": "7thFLOOOR",
+    "stageName": "7thFLOOR",
     "venueId": "7thfloor",
     "day": 1,
     "startAt": 1775892300,
@@ -577,7 +621,7 @@ export const timetable: TimetableSet[] = [
     "artistId": "127",
     "artistName": "タデクイ",
     "stageId": "22",
-    "stageName": "7thFLOOOR",
+    "stageName": "7thFLOOR",
     "venueId": "7thfloor",
     "day": 1,
     "startAt": 1775897100,
@@ -617,6 +661,17 @@ export const timetable: TimetableSet[] = [
     "finishAt": 1775900700
   },
   {
+    "id": "302",
+    "artistId": "302",
+    "artistName": "CUEW特別セッション：アジア発のアーティストが描くあたらしいグローバル展開\nena mori,野村優太（CUEW主催）",
+    "stageId": "23",
+    "stageName": "O-EAST 3F LOBBY",
+    "venueId": "o-east",
+    "day": 1,
+    "startAt": 1775898000,
+    "finishAt": 1775899800
+  },
+  {
     "id": "1520",
     "artistId": "152",
     "artistName": "DJ ゆーかり",
@@ -645,7 +700,7 @@ export const timetable: TimetableSet[] = [
     "stageId": "1",
     "stageName": "O-EAST",
     "venueId": "o-east",
-    "day": 2,
+    "day": 1,
     "startAt": 1775900100,
     "finishAt": 1775902800
   },
@@ -731,7 +786,7 @@ export const timetable: TimetableSet[] = [
     "artistId": "118",
     "artistName": "Blume popo",
     "stageId": "22",
-    "stageName": "7thFLOOOR",
+    "stageName": "7thFLOOR",
     "venueId": "7thfloor",
     "day": 1,
     "startAt": 1775901900,
@@ -901,17 +956,6 @@ export const timetable: TimetableSet[] = [
     "day": 2,
     "startAt": 1775966400,
     "finishAt": 1775969400
-  },
-  {
-    "id": "1550",
-    "artistId": "155",
-    "artistName": "Talk Live ＆ Rest Space",
-    "stageId": "23",
-    "stageName": "O-EAST 3F LOBBY",
-    "venueId": "o-east",
-    "day": 2,
-    "startAt": 1775966400,
-    "finishAt": 1775995200
   },
   {
     "id": "1540",
@@ -1189,6 +1233,17 @@ export const timetable: TimetableSet[] = [
     "finishAt": 1775978100
   },
   {
+    "id": "303",
+    "artistId": "303",
+    "artistName": "新東京合同会社のセカンドフェーズとは？\n新東京（アシスタントMC：ノイハウス萌菜）",
+    "stageId": "23",
+    "stageName": "O-EAST 3F LOBBY",
+    "venueId": "o-east",
+    "day": 2,
+    "startAt": 1775976000,
+    "finishAt": 1775977800
+  },
+  {
     "id": "1501",
     "artistId": "150",
     "artistName": "DJ 星原喜一郎",
@@ -1244,15 +1299,15 @@ export const timetable: TimetableSet[] = [
     "finishAt": 1775980200
   },
   {
-    "id": "136",
-    "artistId": "136",
-    "artistName": "VEGA (Thailand)",
+    "id": "104",
+    "artistId": "104",
+    "artistName": "Phoebe Rings (New Zealand)",
     "stageId": "20",
     "stageName": "TOKIO TOKYO",
     "venueId": "tokio-tokyo",
     "day": 2,
     "startAt": 1775978400,
-    "finishAt": 1775980800
+    "finishAt": 1775981100
   },
   {
     "id": "53",
@@ -1292,7 +1347,7 @@ export const timetable: TimetableSet[] = [
     "artistId": "129",
     "artistName": "Bone Us",
     "stageId": "22",
-    "stageName": "7thFLOOOR",
+    "stageName": "7thFLOOR",
     "venueId": "7thfloor",
     "day": 2,
     "startAt": 1775979000,
@@ -1387,17 +1442,6 @@ export const timetable: TimetableSet[] = [
     "finishAt": 1775984700
   },
   {
-    "id": "104",
-    "artistId": "104",
-    "artistName": "Phoebe Rings (New Zealand)",
-    "stageId": "20",
-    "stageName": "TOKIO TOKYO",
-    "venueId": "tokio-tokyo",
-    "day": 2,
-    "startAt": 1775982900,
-    "finishAt": 1775985600
-  },
-  {
     "id": "67",
     "artistId": "67",
     "artistName": "SuiseiNoboAz",
@@ -1406,6 +1450,17 @@ export const timetable: TimetableSet[] = [
     "venueId": "o-west",
     "day": 2,
     "startAt": 1775982900,
+    "finishAt": 1775985600
+  },
+  {
+    "id": "136",
+    "artistId": "136",
+    "artistName": "VEGA (Thailand)",
+    "stageId": "20",
+    "stageName": "TOKIO TOKYO",
+    "venueId": "tokio-tokyo",
+    "day": 2,
+    "startAt": 1775983200,
     "finishAt": 1775985600
   },
   {
@@ -1435,7 +1490,7 @@ export const timetable: TimetableSet[] = [
     "artistId": "128",
     "artistName": "DOGO",
     "stageId": "22",
-    "stageName": "7thFLOOOR",
+    "stageName": "7thFLOOR",
     "venueId": "7thfloor",
     "day": 2,
     "startAt": 1775983800,
@@ -1473,6 +1528,17 @@ export const timetable: TimetableSet[] = [
     "day": 2,
     "startAt": 1775984400,
     "finishAt": 1775987100
+  },
+  {
+    "id": "304",
+    "artistId": "304",
+    "artistName": "名古屋音楽シーンの最前線と魅力\nQOOPIE×Suspended 4th×スーパー登山部（アシスタントMC：ノイハウス萌菜）",
+    "stageId": "23",
+    "stageName": "O-EAST 3F LOBBY",
+    "venueId": "o-east",
+    "day": 2,
+    "startAt": 1775984400,
+    "finishAt": 1775986200
   },
   {
     "id": "1531",
@@ -1543,7 +1609,7 @@ export const timetable: TimetableSet[] = [
   {
     "id": "117",
     "artistId": "117",
-    "artistName": "Hammer Head Shark",
+    "artistName": "HammerHead Shark",
     "stageId": "20",
     "stageName": "TOKIO TOKYO",
     "venueId": "tokio-tokyo",
@@ -1589,7 +1655,7 @@ export const timetable: TimetableSet[] = [
     "artistId": "126",
     "artistName": "SYAYOS",
     "stageId": "22",
-    "stageName": "7thFLOOOR",
+    "stageName": "7thFLOOR",
     "venueId": "7thfloor",
     "day": 2,
     "startAt": 1775988600,
