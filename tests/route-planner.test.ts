@@ -1,18 +1,67 @@
-import { describe, it, expect } from "vitest";
-import { detectConflictGroups } from "../lib/utils/route-planner";
+import { describe, expect, it } from "vitest";
+import type { TimetableSet } from "../lib/data/timetable";
+import { detectConflictGroups, planRoute } from "../lib/utils/route-planner";
 
-describe("route-planner detectConflictGroups", () => {
+const base = 1680000000;
+
+function buildSet(
+  id: string,
+  venueId: string,
+  startAtOffsetSeconds: number,
+  finishAtOffsetSeconds: number,
+): TimetableSet {
+  return {
+    id,
+    artistId: id,
+    artistName: id,
+    stageId: `${id}-stage`,
+    stageName: `${id}-stage`,
+    venueId,
+    day: 1,
+    startAt: base + startAtOffsetSeconds,
+    finishAt: base + finishAtOffsetSeconds,
+  };
+}
+
+describe("route planner", () => {
   it("groups overlapping performances together", () => {
-    const base = 1680000000;
     const sets = [
-      { id: "a", day: 1, startAt: base + 0, finishAt: base + 60 * 60, venueId: "v1", artistName: "A", stageName: "S1" },
-      { id: "b", day: 1, startAt: base + 30 * 60, finishAt: base + 90 * 60, venueId: "v2", artistName: "B", stageName: "S2" },
-      { id: "c", day: 1, startAt: base + 200 * 60, finishAt: base + 260 * 60, venueId: "v3", artistName: "C", stageName: "S3" },
+      buildSet("a", "v1", 0, 60 * 60),
+      buildSet("b", "v2", 30 * 60, 90 * 60),
+      buildSet("c", "v3", 200 * 60, 260 * 60),
     ];
 
-    const groups = detectConflictGroups(sets as any);
-    expect(groups.length).toBe(1);
-    const group = groups[0];
-    expect(group.performanceIds.sort()).toEqual(["a", "b"].sort());
+    const groups = detectConflictGroups(sets);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.performanceIds).toEqual(["a", "b"]);
+  });
+
+  it("orders conflict options by shortest transfer from the previous set", () => {
+    const favorites = [
+      buildSet("prev", "o-east", -60 * 60, -5 * 60),
+      buildSet("optA", "duo", 0, 10 * 60),
+      buildSet("optB", "quattro", 30, 11 * 60),
+    ];
+
+    const route = planRoute(favorites, 1);
+
+    expect(route.conflictGroups).toHaveLength(1);
+    expect(route.conflictGroups[0]?.performances.map((performance) => performance.id)).toEqual([
+      "optA",
+      "optB",
+    ]);
+  });
+
+  it("includes negative buffers in the average buffer summary", () => {
+    const favorites = [
+      buildSet("first", "o-east", 0, 10 * 60),
+      buildSet("second", "quattro", 11 * 60, 40 * 60),
+    ];
+
+    const route = planRoute(favorites, 1);
+
+    expect(route.impossibleLegs).toBe(1);
+    expect(route.averageBuffer).toBeLessThan(0);
   });
 });

@@ -14,6 +14,10 @@ const EMPTY_STATE: StoredConflictSelectionState = {
 };
 
 const STORAGE_EVENT = "synchronicity:conflict-selection-changed";
+const storageSnapshotCache = new Map<
+  string,
+  { raw: string | null; state: StoredConflictSelectionState }
+>();
 
 export function useConflictSelection(day: 1 | 2) {
   const storageKey = `synchronicity-conflict-state-day${day}`;
@@ -157,18 +161,27 @@ function readStoredConflictSelection(
   const stored = window.localStorage.getItem(storageKey);
 
   if (!stored) {
+    storageSnapshotCache.set(storageKey, { raw: null, state: EMPTY_STATE });
     return EMPTY_STATE;
+  }
+
+  const cachedSnapshot = storageSnapshotCache.get(storageKey);
+  if (cachedSnapshot?.raw === stored) {
+    return cachedSnapshot.state;
   }
 
   try {
     const parsed = JSON.parse(stored) as Partial<StoredConflictSelectionState>;
-    return {
+    const nextState = {
       groupSelections: normalizeGroupSelections(parsed.groupSelections),
       focusedBranchId:
         typeof parsed.focusedBranchId === "string" ? parsed.focusedBranchId : null,
     };
+    storageSnapshotCache.set(storageKey, { raw: stored, state: nextState });
+    return nextState;
   } catch (error) {
     console.warn(`Failed to parse conflict selections for day ${day}:`, error);
+    storageSnapshotCache.set(storageKey, { raw: stored, state: EMPTY_STATE });
     return EMPTY_STATE;
   }
 }
@@ -181,7 +194,9 @@ function writeStoredConflictSelection(
     return;
   }
 
-  window.localStorage.setItem(storageKey, JSON.stringify(state));
+  const serialized = JSON.stringify(state);
+  storageSnapshotCache.set(storageKey, { raw: serialized, state });
+  window.localStorage.setItem(storageKey, serialized);
   window.dispatchEvent(new Event(STORAGE_EVENT));
 }
 

@@ -7,7 +7,19 @@ import { useRouteDirections } from "@/lib/hooks/use-route-directions";
 import { planRoute } from "@/lib/utils/route-planner";
 
 export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
-  const conflictState = useConflictSelection(day);
+  const {
+    groupSelections,
+    focusedBranchId,
+    selectedCount,
+    toggleOption,
+    setGroupSelection,
+    selectAllInGroup,
+    clearGroup,
+    setFocusedBranch,
+    syncWithRoute,
+    resetDay,
+    isHydrated,
+  } = useConflictSelection(day);
 
   const baseRoute = useMemo(
     () =>
@@ -15,22 +27,23 @@ export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
         favorites,
         day,
         {},
-        conflictState.groupSelections,
-        conflictState.focusedBranchId,
+        groupSelections,
+        focusedBranchId,
       ),
-    [favorites, day, conflictState.groupSelections, conflictState.focusedBranchId],
+    [favorites, day, groupSelections, focusedBranchId],
   );
 
   useEffect(() => {
-    if (!conflictState.isHydrated) {
+    if (!isHydrated) {
       return;
     }
 
-    conflictState.syncWithRoute(baseRoute.conflictGroups, baseRoute.focusedBranchId || null);
+    syncWithRoute(baseRoute.conflictGroups, baseRoute.focusedBranchId || null);
   }, [
     baseRoute.conflictGroups,
     baseRoute.focusedBranchId,
-    conflictState,
+    isHydrated,
+    syncWithRoute,
   ]);
 
   const { overrides, isLoading, hasRouteApiError } = useRouteDirections(baseRoute.focusedBranch);
@@ -41,24 +54,34 @@ export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
         favorites,
         day,
         overrides,
-        conflictState.groupSelections,
-        conflictState.focusedBranchId,
+        groupSelections,
+        focusedBranchId,
       ),
-    [favorites, day, overrides, conflictState.groupSelections, conflictState.focusedBranchId],
+    [favorites, day, overrides, groupSelections, focusedBranchId],
   );
 
   useEffect(() => {
-    if (!conflictState.isHydrated) {
+    if (!isHydrated) {
       return;
     }
 
-    conflictState.syncWithRoute(route.conflictGroups, route.focusedBranchId || null);
-  }, [route.conflictGroups, route.focusedBranchId, conflictState]);
+    syncWithRoute(route.conflictGroups, route.focusedBranchId || null);
+  }, [route.conflictGroups, route.focusedBranchId, isHydrated, syncWithRoute]);
 
   return {
     route,
     isLoadingDirections: isLoading,
     hasRouteApiError,
-    ...conflictState,
+    groupSelections,
+    focusedBranchId,
+    selectedCount,
+    toggleOption,
+    setGroupSelection,
+    selectAllInGroup,
+    clearGroup,
+    setFocusedBranch,
+    syncWithRoute,
+    resetDay,
+    isHydrated,
   };
 }

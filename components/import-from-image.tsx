@@ -351,9 +351,9 @@ export function ImportFromImageButton({
                                 {t("timetable.import.conflictWarning")}
                               </div>
                               <ul className="space-y-2 text-xs">
-                                {conflictsInfo.map((conflict, index) => (
+                                {conflictsInfo.map((conflict) => (
                                   <li
-                                    key={`${conflict.left}-${conflict.right}-${index}`}
+                                    key={`${conflict.left}-${conflict.right}-${conflict.time}`}
                                     className="rounded-lg border border-amber-500/15 bg-black/10 px-2.5 py-2"
                                   >
                                     <div className="font-medium text-amber-200">

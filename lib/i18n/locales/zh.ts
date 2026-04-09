@@ -6,11 +6,18 @@ const zh = {
   nav: {
     home: "首页",
     browse: "浏览",
+    plan: "路线",
+    map: "地图",
   },
   home: {
     subtitle: "SYNCHRONICITY'26",
     title: "行程规划",
     tagline: "时间表、地图和路线放在一起看。",
+    cards: {
+      browse: "浏览全景",
+      plan: "规划路线",
+      map: "查看地图",
+    },
     ctaTimetable: "查看时间表",
     ctaPlan: "看我的路线",
     ctaMap: "看场地地图",

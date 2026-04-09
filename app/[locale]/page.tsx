@@ -49,15 +49,15 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex min-h-full flex-col px-5 py-8 sm:px-6 lg:px-10 lg:py-14 2xl:px-12">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 lg:gap-14">
+    <div className="flex min-h-full flex-col px-4 py-7 sm:px-6 lg:px-8 lg:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 lg:gap-12">
         <div className="flex flex-col items-center text-center">
           <div className="inline-flex items-center rounded-full border border-zinc-800 bg-zinc-950/80 px-3 py-1.5 text-[11px] font-semibold leading-none tracking-[0.16em] text-zinc-400">
             {t("home.subtitle")}
           </div>
 
-          <div className="mt-6 space-y-4 lg:max-w-3xl">
-            <h1 className="text-3xl font-bold leading-tight tracking-tight text-zinc-50 sm:text-4xl lg:text-5xl xl:text-6xl">
+          <div className="mt-5 space-y-4 lg:max-w-3xl">
+            <h1 className="text-3xl font-bold leading-tight tracking-tight text-zinc-50 sm:text-4xl lg:text-[2.9rem]">
               {t("home.title")}
             </h1>
             <p className="mx-auto max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
@@ -75,27 +75,27 @@ export default function Home() {
         </div>
 
         <div className="flex justify-center">
-          <div className="grid w-full gap-4 md:max-w-5xl md:grid-cols-2 xl:grid-cols-3 xl:gap-6">
+          <div className="grid w-full gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
             {cards.map((card) => {
               const Icon = card.icon;
               return (
                 <Link
                   key={card.href}
                   href={card.href}
-                  className={`group relative flex min-h-[208px] overflow-hidden rounded-[34px] border p-6 transition-all duration-300 hover:-translate-y-1 sm:min-h-[232px] sm:p-7 xl:min-h-[264px] xl:p-8 ${card.accentClass}`}
+                  className={`group relative flex min-h-[184px] overflow-hidden rounded-[30px] border p-5 transition-all duration-300 hover:-translate-y-1 sm:min-h-[204px] sm:p-6 lg:min-h-[220px] ${card.accentClass}`}
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.05),transparent_55%)] opacity-70" />
-                  <div className="relative flex w-full flex-col justify-between gap-10">
+                  <div className="relative flex w-full flex-col justify-between gap-8">
                     <div
-                      className={`flex h-20 w-20 items-center justify-center rounded-[28px] ring-1 sm:h-24 sm:w-24 ${card.iconClass}`}
+                      className={`flex h-16 w-16 items-center justify-center rounded-[24px] ring-1 sm:h-20 sm:w-20 ${card.iconClass}`}
                     >
-                      <Icon className="h-8 w-8 sm:h-9 sm:w-9" />
+                      <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
                     </div>
                     <div className="flex items-end justify-between gap-4">
-                      <span className="text-3xl font-semibold tracking-tight text-zinc-50 sm:text-[2rem] xl:text-[2.35rem]">
+                      <span className="text-2xl font-semibold tracking-tight text-zinc-50 sm:text-[1.75rem] lg:text-[1.95rem]">
                         {card.label}
                       </span>
-                      <ChevronRight className="mb-1 h-7 w-7 shrink-0 text-zinc-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-zinc-200" />
+                      <ChevronRight className="mb-1 h-6 w-6 shrink-0 text-zinc-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-zinc-200" />
                     </div>
                   </div>
                 </Link>

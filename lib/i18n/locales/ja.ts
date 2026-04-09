@@ -5,12 +5,19 @@ const ja = {
   },
   nav: {
     home: "ホーム",
-    browse: "浏览",
+    browse: "一覧",
+    plan: "ルート",
+    map: "地図",
   },
   home: {
     subtitle: "SYNCHRONICITY'26",
     title: "Route Planner",
     tagline: "タイムテーブル、地図、ルートをひとまとめに。",
+    cards: {
+      browse: "全体を見る",
+      plan: "ルートを組む",
+      map: "地図を見る",
+    },
     ctaTimetable: "タイムテーブルを見る",
     ctaPlan: "マイルートを見る",
     ctaMap: "会場マップを見る",

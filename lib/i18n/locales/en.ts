@@ -6,11 +6,18 @@ const en = {
   nav: {
     home: "Home",
     browse: "Browse",
+    plan: "Plan",
+    map: "Map",
   },
   home: {
     subtitle: "SYNCHRONICITY'26",
     title: "Route Planner",
     tagline: "Keep the timetable, map, and saved route together.",
+    cards: {
+      browse: "Browse Overview",
+      plan: "Plan Route",
+      map: "View Map",
+    },
     ctaTimetable: "View timetable",
     ctaPlan: "See my route",
     ctaMap: "Open venue map",
