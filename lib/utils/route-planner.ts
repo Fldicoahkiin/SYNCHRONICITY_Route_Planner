@@ -439,7 +439,10 @@ function getNormalizedSelection(
 }
 
 function getConflictGroupId(performanceIds: string[]): string {
-  return `conflict:${performanceIds.join("-")}`;
+  // Anchor on the earliest performance so the ID stays stable when
+  // transit-aware detection pulls additional sets into the group.
+  const sorted = [...performanceIds].sort();
+  return `conflict:${sorted[0]}`;
 }
 
 function compareSets(a: TimetableSet, b: TimetableSet): number {
