@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -17,58 +17,62 @@ import { useTranslation } from "@/lib/i18n/client";
 import { formatTime, type RouteLeg } from "@/lib/utils/route-planner";
 
 function createColorIcon(color: string) {
-  const pinSvg = `<svg viewBox="0 0 24 24" width="24" height="28" fill="${color}" stroke="#18181b" stroke-width="2.5" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5))"><path d="M12 2C7.03 2 3 6.03 3 11c0 6.75 9 11 9 11s9-4.25 9-11c0-4.97-4.03-9-9-9z"/><circle cx="12" cy="11" r="3" fill="#18181b"/></svg>`;
+  const pinSvg = `<svg viewBox="0 0 24 24" width="16" height="20" fill="${color}" stroke="#18181b" stroke-width="2" style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5))"><path d="M12 2C7.03 2 3 6.03 3 11c0 6.75 9 11 9 11s9-4.25 9-11c0-4.97-4.03-9-9-9z"/><circle cx="12" cy="11" r="3" fill="#18181b"/></svg>`;
   return divIcon({
     className: "",
-    html: `<div style="display:flex;justify-content:center;opacity:0.75;margin-left:-12px;margin-top:-28px;">${pinSvg}</div>`,
+    html: `<div style="display:flex;justify-content:center;opacity:0.8;margin-left:-8px;margin-top:-20px;">${pinSvg}</div>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+    popupAnchor: [0, -20],
+  });
+}
+
+function createWalkLabelIcon(minutes: number, unit: string) {
+  const text = `${minutes}${unit}`;
+  const width = Math.max(28, text.length * 6 + 8);
+  return divIcon({
+    className: "",
+    html: `<div style="display:flex;align-items:center;justify-content:center;padding:0 4px;height:14px;border-radius:999px;background:rgba(10,10,10,0.85);color:rgba(160,160,160,0.95);font-weight:600;font-size:8px;white-space:nowrap;border: 1px solid rgba(255,255,255,0.1)">${text}</div>`,
+    iconSize: [width, 14],
+    iconAnchor: [width / 2, 7],
+  });
+}
+
+function createNumberedIcon(color: string, number: number, venueName: string) {
+  const pinSvg = `<svg viewBox="0 0 24 24" width="24" height="28" fill="${color}" stroke="#0a0a0a" stroke-width="2" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6))"><path d="M12 2C7.03 2 3 6.03 3 11c0 6.75 9 11 9 11s9-4.25 9-11c0-4.97-4.03-9-9-9z"/></svg>`;
+  return divIcon({
+    className: "",
+    html: `
+      <div style="display:flex;align-items:center;margin-left:-12px;margin-top:-28px;pointer-events:none;">
+        <div style="position:relative;width:24px;height:28px;display:flex;justify-content:center;pointer-events:auto;">
+          ${pinSvg}
+          <div style="position:absolute;top:3px;font-weight:800;font-size:11px;color:#0a0a0a;letter-spacing:-0.5px;">${number}</div>
+        </div>
+        <div style="background:rgba(24,24,27,0.95);color:#e4e4e7;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;white-space:nowrap;margin-left:2px;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(4px);box-shadow:0 1px 3px rgba(0,0,0,0.4);pointer-events:auto;">${venueName}</div>
+      </div>
+    `,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
     popupAnchor: [0, -28],
   });
 }
 
-function createWalkLabelIcon(minutes: number, unit: string) {
-  const text = `${minutes}${unit}`;
-  const width = Math.max(32, text.length * 6 + 10);
-  return divIcon({
-    className: "",
-    html: `<div style="display:flex;align-items:center;justify-content:center;padding:0 4px;height:16px;border-radius:999px;background:rgba(10,10,10,0.7);color:rgba(160,160,160,0.85);font-weight:500;font-size:9px;white-space:nowrap;">${text}</div>`,
-    iconSize: [width, 16],
-    iconAnchor: [width / 2, 8],
-  });
-}
-
-function createNumberedIcon(color: string, number: number, venueName: string) {
-  const pinSvg = `<svg viewBox="0 0 24 24" width="36" height="42" fill="${color}" stroke="#0a0a0a" stroke-width="2" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6))"><path d="M12 2C7.03 2 3 6.03 3 11c0 6.75 9 11 9 11s9-4.25 9-11c0-4.97-4.03-9-9-9z"/></svg>`;
-  return divIcon({
-    className: "",
-    html: `
-      <div style="display:flex;align-items:center;margin-left:-18px;margin-top:-42px;pointer-events:none;">
-        <div style="position:relative;width:36px;height:42px;display:flex;justify-content:center;pointer-events:auto;">
-          ${pinSvg}
-          <div style="position:absolute;top:7px;font-weight:900;font-size:15px;color:#0a0a0a;letter-spacing:-0.5px;">${number}</div>
-        </div>
-        <div style="background:rgba(24,24,27,0.95);color:#e4e4e7;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;margin-left:2px;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(4px);box-shadow:0 2px 4px rgba(0,0,0,0.4);pointer-events:auto;">${venueName}</div>
-      </div>
-    `,
-    iconSize: [0, 0],
-    iconAnchor: [0, 0],
-    popupAnchor: [0, -42],
-  });
-}
-
 function MapBounds({ points }: { points: LatLngExpression[] }) {
   const map = useMap();
-  if (points.length > 1) {
-    import("leaflet").then((L) => {
-      map.fitBounds(L.latLngBounds(points as L.LatLngExpression[]), {
-        padding: [40, 40],
-        maxZoom: 17,
+
+  useEffect(() => {
+    if (points.length > 1) {
+      import("leaflet").then((L) => {
+        map.fitBounds(L.latLngBounds(points as L.LatLngExpression[]), {
+          padding: [40, 40],
+          maxZoom: 17,
+        });
       });
-    });
-  } else if (points.length === 1) {
-    map.setView(points[0], 16);
-  }
+    } else if (points.length === 1) {
+      map.setView(points[0], 16);
+    }
+  }, [map, points]);
+
   return null;
 }
 
@@ -143,7 +147,7 @@ export default function VenueMap({
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         crossOrigin="anonymous"
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png"
       />
 
       {venues.map((v) => {
@@ -210,7 +214,7 @@ export default function VenueMap({
                 : segment.status === "tight"
                   ? "#f59e0b"
                   : "#0ea5e9",
-            weight: 5,
+            weight: 3,
             opacity: 0.85,
             lineCap: "round",
             lineJoin: "round",
