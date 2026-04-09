@@ -61,16 +61,31 @@ function MapBounds({ points }: { points: LatLngExpression[] }) {
   const map = useMap();
 
   useEffect(() => {
+    let cancelled = false;
+
     if (points.length > 1) {
       import("leaflet").then((L) => {
-        map.fitBounds(L.latLngBounds(points as L.LatLngExpression[]), {
-          padding: [40, 40],
-          maxZoom: 17,
-        });
+        if (cancelled) return;
+        try {
+          map.fitBounds(L.latLngBounds(points as L.LatLngExpression[]), {
+            padding: [40, 40],
+            maxZoom: 17,
+          });
+        } catch {
+          // Map may have been removed during async import
+        }
       });
     } else if (points.length === 1) {
-      map.setView(points[0], 16);
+      try {
+        map.setView(points[0], 16);
+      } catch {
+        // Map may have been removed
+      }
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [map, points]);
 
   return null;
@@ -147,7 +162,7 @@ export default function VenueMap({
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         crossOrigin="anonymous"
-        url="https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
 
       {venues.map((v) => {

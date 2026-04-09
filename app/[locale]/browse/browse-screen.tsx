@@ -257,7 +257,7 @@ export default function BrowsePage({
                     setShowFavoritesOnly(false);
                   }
                 }}
-                disabled={favoriteIds.size === 0 || undefined}
+                disabled={favoriteIds.size === 0}
                 className="flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/40 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-all hover:text-zinc-200 disabled:opacity-50"
                 title={t("timetable.clearFavorites")}
               >
