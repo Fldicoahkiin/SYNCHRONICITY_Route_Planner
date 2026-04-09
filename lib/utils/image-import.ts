@@ -41,7 +41,9 @@ const REGION_PROFILES = [
   { minSaturation: 0.42, minLuma: 0.34, minChannel: 60 },
   { minSaturation: 0.38, minLuma: 0.34, minChannel: 60 },
   { minSaturation: 0.34, minLuma: 0.34, minChannel: 60 },
-  { minSaturation: 0.34, minLuma: 0.3, minChannel: 60 },
+  { minSaturation: 0.34, minLuma: 0.28, minChannel: 60 },
+  { minSaturation: 0.25, minLuma: 0.18, minChannel: 50 },
+  { minSaturation: 0.15, minLuma: 0.10, minChannel: 40 },
 ];
 const MIN_REGION_COUNT = 6;
 const MAX_REGION_COUNT = 24;

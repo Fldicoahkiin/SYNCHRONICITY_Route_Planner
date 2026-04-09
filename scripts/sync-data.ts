@@ -28,7 +28,7 @@ function cleanData(data: unknown): unknown {
   if (data !== null && typeof data === "object") {
     return Object.fromEntries(
       Object.entries(data)
-        .filter(([_, v]) => v !== null && v !== "" && (Array.isArray(v) ? v.length > 0 : true))
+        .filter(([, v]) => v !== null && v !== "" && (Array.isArray(v) ? v.length > 0 : true))
         .map(([k, v]) => [k, cleanData(v)])
     );
   }
