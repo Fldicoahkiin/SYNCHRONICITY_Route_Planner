@@ -20,20 +20,31 @@ export function buildGoogleMapsUrl(
   )}&destination=${encodeURIComponent(destination)}&travelmode=walking`;
 }
 
-export function buildGoogleMapsRouteUrl(stops: MapStop[]): string {
+interface MapStopWithLabel extends MapStop {
+  label?: string;
+}
+
+function encodeStopLabel(stop: MapStopWithLabel): string {
+  // Google Maps can resolve labeled waypoints when they include coordinates
+  if (stop.label) {
+    return `${stop.lat},${stop.lng}`;
+  }
+  return encodeStop(stop);
+}
+
+export function buildGoogleMapsRouteUrl(stops: MapStopWithLabel[]): string {
   if (stops.length < 2) {
     return "https://www.google.com/maps";
   }
 
   // Google Maps URL scheme supports a maximum of 9 waypoints plus origin and destination.
-  // If we have more, we must trim them to avoid 400 Bad Request.
   const routeStops = stops.length > 11 ? [stops[0], ...stops.slice(1, 10), stops[stops.length - 1]] : stops;
 
-  const origin = encodeStop(routeStops[0]);
-  const destination = encodeStop(routeStops[routeStops.length - 1]);
+  const origin = encodeStopLabel(routeStops[0]);
+  const destination = encodeStopLabel(routeStops[routeStops.length - 1]);
   const waypoints = routeStops
     .slice(1, -1)
-    .map(encodeStop)
+    .map(encodeStopLabel)
     .join("|");
 
   const query = new URLSearchParams({

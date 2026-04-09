@@ -36,7 +36,7 @@ const zh = {
     title: "行程规划",
     tagline: "时间表、地图和路线放在一起看。",
     cards: {
-      browse: "完整时间表",
+      browse: "时间表",
       plan: "规划路线",
       map: "查看地图",
     },

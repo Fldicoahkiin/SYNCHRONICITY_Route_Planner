@@ -94,28 +94,32 @@ export function getRouteExportStops(legs: RouteLeg[]): Array<{
       continue;
     }
 
+    const timeLabel = formatTimePair(leg.set.startAt, leg.set.finishAt);
+    const annotation = `${leg.set.artistName} ${timeLabel}`;
+
     const last = stops[stops.length - 1];
-    if (!last || last.lat !== venue.lat || last.lng !== venue.lng) {
+    if (last && last.lat === venue.lat && last.lng === venue.lng) {
+      // Same venue — append artist info to existing stop label
+      last.label = `${last.label} / ${annotation}`;
+    } else {
       stops.push({
         lat: venue.lat,
         lng: venue.lng,
-        label: venue.name,
-      });
-    }
-  }
-
-  const finalVenueId = legs[legs.length - 1]?.set.venueId;
-  const finalVenue = finalVenueId ? venueMap.get(finalVenueId) : null;
-  if (finalVenue) {
-    const last = stops[stops.length - 1];
-    if (!last || last.lat !== finalVenue.lat || last.lng !== finalVenue.lng) {
-      stops.push({
-        lat: finalVenue.lat,
-        lng: finalVenue.lng,
-        label: finalVenue.name,
+        label: `${venue.name}: ${annotation}`,
       });
     }
   }
 
   return stops;
+}
+
+/** Compact HH:MM-HH:MM for export labels */
+function formatTimePair(startAt: number, finishAt: number): string {
+  const fmt = (ts: number) => {
+    const d = new Date(ts * 1000);
+    const h = d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", hour12: false });
+    const m = d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", minute: "2-digit" });
+    return `${h}:${m.padStart(2, "0")}`;
+  };
+  return `${fmt(startAt)}-${fmt(finishAt)}`;
 }

@@ -36,7 +36,7 @@ const ja = {
     title: "Route Planner",
     tagline: "タイムテーブル、地図、ルートをひとまとめに。",
     cards: {
-      browse: "全タイムテーブル",
+      browse: "タイムテーブル",
       plan: "ルートを組む",
       map: "地図を見る",
     },

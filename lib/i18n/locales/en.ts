@@ -36,7 +36,7 @@ const en = {
     title: "Route Planner",
     tagline: "Keep the timetable, map, and saved route together.",
     cards: {
-      browse: "Full Timetable",
+      browse: "Timetable",
       plan: "Plan Route",
       map: "View Map",
     },
