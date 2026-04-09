@@ -6,18 +6,21 @@ import type { TimetableSet } from "@/lib/data/timetable";
 import { formatTime } from "@/lib/utils/route-planner";
 import { cn } from "@/lib/utils";
 
-const HEADER_HEIGHT = 44;
-const TIME_COLUMN_WIDTH = 54;
-const COLUMN_WIDTH = 120;
-const MINUTE_HEIGHT = 2.35;
-const BLOCK_GAP = 4;
+const HEADER_HEIGHT = 54;
+const TIME_COLUMN_WIDTH = 64;
+const COLUMN_WIDTH = 280;
+const MINUTE_HEIGHT = 4.0;
+const BLOCK_GAP = 6;
 
 const shortVenueLabel: Record<string, string> = {
   "o-east": "O-EAST",
+  "o-east-2nd": "O-EAST 2nd",
+  "o-east-3f": "O-EAST 3F",
   duo: "duo",
   "o-west": "O-WEST",
   clubasia: "clubasia",
   "o-nest": "O-nest",
+  "o-nest-2nd": "O-nest 2nd",
   quattro: "QUATTRO",
   veats: "Veats",
   www: "WWW",
@@ -25,6 +28,7 @@ const shortVenueLabel: Record<string, string> = {
   "tokio-tokyo": "TOKIO",
   fows: "FOWS",
   "7thfloor": "7thFLOOR",
+  linecube: "LINE CUBE",
 };
 
 interface TimetableBoardProps {
@@ -33,6 +37,7 @@ interface TimetableBoardProps {
   selectedIds?: Set<string>;
   routeOrder?: Map<string, number>;
   onlyActiveVenues?: boolean;
+  compactLayout?: boolean;
   onSelectSet?: (set: TimetableSet) => void;
   onToggleFavorite?: (id: string) => void;
   className?: string;
@@ -65,9 +70,9 @@ function hexToRgba(hex: string, alpha: number): string {
   const expanded =
     safeHex.length === 3
       ? safeHex
-          .split("")
-          .map((part) => `${part}${part}`)
-          .join("")
+        .split("")
+        .map((part) => `${part}${part}`)
+        .join("")
       : safeHex;
 
   const red = Number.parseInt(expanded.slice(0, 2), 16);
@@ -82,6 +87,7 @@ export const TimetableBoard = memo(function TimetableBoard({
   selectedIds,
   routeOrder,
   onlyActiveVenues = false,
+  compactLayout = false,
   onSelectSet,
   onToggleFavorite,
   className,
@@ -141,46 +147,71 @@ export const TimetableBoard = memo(function TimetableBoard({
 
   const venueGroups = useMemo(() => {
     const map = new Map<string, Array<{ set: TimetableSet; groupCount: number; groupIndex: number }>>();
-    for (const venue of visibleVenues) {
-      map.set(venue.id, []);
-    }
-    
-    for (const set of sets) {
-      if (!set.venueId || !map.has(set.venueId)) continue;
-      map.get(set.venueId)!.push({ set, groupCount: 1, groupIndex: 0 });
+
+    if (compactLayout) {
+      map.set("ALL", sets.map((set) => ({ set, groupCount: 1, groupIndex: 0 })));
+    } else {
+      for (const venue of visibleVenues) {
+        map.set(venue.id, []);
+      }
+
+      for (const set of sets) {
+        if (!set.venueId || !map.has(set.venueId)) continue;
+        map.get(set.venueId)!.push({ set, groupCount: 1, groupIndex: 0 });
+      }
     }
 
     for (const items of map.values()) {
       if (items.length === 0) continue;
-      
-      items.sort((a, b) => a.set.startAt - b.set.startAt);
-      
-      const columns: typeof items[] = [];
-      for (const item of items) {
-        let placed = false;
-        for (let i = 0; i < columns.length; i++) {
-          const lastInColumn = columns[i][columns[i].length - 1];
-          if (lastInColumn.set.finishAt <= item.set.startAt) {
-            columns[i].push(item);
-            item.groupIndex = i;
-            placed = true;
-            break;
+
+      items.sort((a, b) => getTokyoMinutes(a.set.startAt) - getTokyoMinutes(b.set.startAt));
+
+      let currentCluster: typeof items = [];
+      let clusterEnd = -1;
+
+      const processCluster = (cluster: typeof items) => {
+        if (cluster.length === 0) return;
+        const columns: typeof items[] = [];
+        for (const item of cluster) {
+          let placed = false;
+          for (let i = 0; i < columns.length; i++) {
+            const lastInColumn = columns[i][columns[i].length - 1];
+            if (getTokyoMinutes(lastInColumn.set.finishAt) <= getTokyoMinutes(item.set.startAt)) {
+              columns[i].push(item);
+              item.groupIndex = i;
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) {
+            item.groupIndex = columns.length;
+            columns.push([item]);
           }
         }
-        if (!placed) {
-          item.groupIndex = columns.length;
-          columns.push([item]);
+        const maxCols = columns.length;
+        for (const item of cluster) {
+          item.groupCount = maxCols;
+        }
+      };
+
+      for (const item of items) {
+        const start = getTokyoMinutes(item.set.startAt);
+        const finish = getTokyoMinutes(item.set.finishAt);
+
+        if (start >= clusterEnd) {
+          processCluster(currentCluster);
+          currentCluster = [item];
+          clusterEnd = finish;
+        } else {
+          currentCluster.push(item);
+          clusterEnd = Math.max(clusterEnd, finish);
         }
       }
-      
-      const maxCols = columns.length;
-      for (const item of items) {
-        item.groupCount = maxCols;
-      }
+      processCluster(currentCluster);
     }
-    
+
     return map;
-  }, [sets, visibleVenues]);
+  }, [sets, visibleVenues, compactLayout]);
 
   return (
     <div
@@ -194,27 +225,35 @@ export const TimetableBoard = memo(function TimetableBoard({
       <div className="pointer-events-none sticky right-0 top-0 z-40 h-full w-0.5 bg-gradient-to-b from-cyan-500/60 via-cyan-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
       <div
-        className="relative min-w-max"
+        className={cn("relative", compactLayout ? "w-full" : "min-w-max")}
         style={{
-          width: TIME_COLUMN_WIDTH + visibleVenues.length * COLUMN_WIDTH,
+          width: compactLayout ? "100%" : TIME_COLUMN_WIDTH + visibleVenues.length * COLUMN_WIDTH,
           height: HEADER_HEIGHT + timeRange.height,
         }}
       >
-        <div className="sticky top-0 z-20 flex h-11 border-b border-zinc-800 bg-background/95 backdrop-blur">
-          {visibleVenues.map((venue) => (
-            <div
-              key={venue.id}
-              className="flex shrink-0 items-center justify-center border-r border-zinc-900 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400"
-              style={{ width: COLUMN_WIDTH }}
-            >
-              {shortVenueLabel[venue.id] ?? venue.name}
-            </div>
-          ))}
-        </div>
+        {!compactLayout && (
+          <div className="sticky top-0 z-20 flex h-11 border-b border-zinc-800 bg-background/95 backdrop-blur">
+            <div className="shrink-0 border-r border-zinc-900" style={{ width: TIME_COLUMN_WIDTH }} />
+            {visibleVenues.map((venue) => (
+              <div
+                key={venue.id}
+                className="flex shrink-0 items-center justify-center border-r border-zinc-900 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400"
+                style={{ width: COLUMN_WIDTH }}
+              >
+                {shortVenueLabel[venue.id] ?? venue.name}
+              </div>
+            ))}
+          </div>
+        )}
+        {compactLayout && (
+          <div className="sticky top-0 z-20 flex h-11 border-b border-zinc-800 bg-background/95 backdrop-blur items-center px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+            MY TIMETABLE
+          </div>
+        )}
 
         <div className="absolute inset-x-0 top-11 bottom-0">
           {/* Sticky time column background + labels */}
-          <div className="sticky left-0 z-10 h-full w-[54px]">
+          <div className="sticky left-0 z-10 h-full w-[64px]">
             <div className="absolute inset-y-0 left-0 w-full border-r border-zinc-800 bg-background" />
             {hourLines.map((minute) => {
               const top = (minute - timeRange.startMinutes) * MINUTE_HEIGHT;
@@ -233,7 +272,7 @@ export const TimetableBoard = memo(function TimetableBoard({
             })}
           </div>
 
-          {visibleVenues.map((venue, index) => (
+          {!compactLayout && visibleVenues.map((venue, index) => (
             <div
               key={venue.id}
               className="absolute top-0 bottom-0 border-r border-zinc-900/80"
@@ -249,11 +288,11 @@ export const TimetableBoard = memo(function TimetableBoard({
             return (
               <div key={`line-${minute}`}>
                 <div
-                  className="absolute left-[54px] right-0 border-t border-zinc-800/80"
+                  className="absolute left-[64px] right-0 border-t border-zinc-800/80"
                   style={{ top }}
                 />
                 <div
-                  className="absolute left-[54px] right-0 border-t border-dashed border-zinc-900/70"
+                  className="absolute left-[64px] right-0 border-t border-dashed border-zinc-900/70"
                   style={{ top: top + 30 * MINUTE_HEIGHT }}
                 />
               </div>
@@ -261,11 +300,11 @@ export const TimetableBoard = memo(function TimetableBoard({
           })}
 
           {Array.from(venueGroups.entries()).flatMap(([venueId, items]) => {
-            const column = venueIndex.get(venueId)!;
-            const venue = venueMap.get(venueId);
-            if (!venue) return null;
+            const column = compactLayout ? 0 : venueIndex.get(venueId) ?? 0;
 
             return items.map(({ set, groupCount, groupIndex }) => {
+              const venue = venueMap.get(set.venueId || venueId);
+              if (!venue) return null;
               const startMinutes = getTokyoMinutes(set.startAt);
               const finishMinutes = getTokyoMinutes(set.finishAt);
               const top =
@@ -274,66 +313,91 @@ export const TimetableBoard = memo(function TimetableBoard({
                 40,
                 (finishMinutes - startMinutes) * MINUTE_HEIGHT - BLOCK_GAP,
               );
-            const isSelected = selectedIds?.has(set.id) ?? false;
-            const order = routeOrder?.get(set.id);
+              const isSelected = selectedIds?.has(set.id) ?? false;
+              const order = routeOrder?.get(set.id);
+              const isSmall = height <= 44;
+              const isNarrow = groupCount >= 3;
 
-            return (
-              <button
-                key={set.id}
-                type="button"
-                onClick={() => {
-                  if (onSelectSet) {
-                    onSelectSet(set);
-                  } else {
-                    onToggleFavorite?.(set.id);
-                  }
-                }}
-                className={cn(
-                  "group absolute flex flex-col rounded-lg border px-2 py-1 text-left transition-all duration-300 hover:-translate-y-0.5",
-                  onSelectSet || onToggleFavorite ? "cursor-pointer" : "cursor-default",
-                  isSelected
-                    ? "ring-2 ring-white/30"
-                    : "opacity-85 hover:opacity-100",
-                )}
-                style={{
-                  left: TIME_COLUMN_WIDTH + column * COLUMN_WIDTH + BLOCK_GAP + ((COLUMN_WIDTH - BLOCK_GAP * 2) / groupCount) * groupIndex,
-                  top,
-                  width: (COLUMN_WIDTH - BLOCK_GAP * 2) / groupCount,
-                  height,
-                  background: isSelected
-                    ? `linear-gradient(180deg, ${hexToRgba(
+              const leftPos = compactLayout
+                ? `calc(${TIME_COLUMN_WIDTH}px + (100% - ${TIME_COLUMN_WIDTH}px) / ${groupCount} * ${groupIndex} + ${BLOCK_GAP}px)`
+                : `${TIME_COLUMN_WIDTH + column * COLUMN_WIDTH + BLOCK_GAP + ((COLUMN_WIDTH - BLOCK_GAP * 2) / groupCount) * groupIndex + (groupIndex > 0 ? BLOCK_GAP / 2 : 0)}px`;
+                
+              const widthPos = compactLayout
+                ? `calc((100% - ${TIME_COLUMN_WIDTH}px) / ${groupCount} - ${BLOCK_GAP * 2}px)`
+                : `${((COLUMN_WIDTH - BLOCK_GAP * 2) / groupCount) - (groupCount > 1 ? BLOCK_GAP / 2 : 0)}px`;
+
+              return (
+                <button
+                  key={set.id}
+                  type="button"
+                  onClick={() => {
+                    if (onSelectSet) onSelectSet(set);
+                    else onToggleFavorite?.(set.id);
+                  }}
+                  className={cn(
+                    "group absolute flex flex-col overflow-hidden rounded-lg border text-left transition-all duration-200 hover:brightness-110 active:scale-[0.97]",
+                    isSmall ? "px-1 py-0.5 justify-center" : "px-2 py-1",
+                    onSelectSet || onToggleFavorite ? "cursor-pointer" : "cursor-default",
+                    isSelected
+                      ? "ring-2 ring-white/30"
+                      : "opacity-85 hover:opacity-100",
+                  )}
+                  style={{
+                    left: leftPos,
+                    top,
+                    width: widthPos,
+                    height,
+                    background: isSelected
+                      ? `linear-gradient(180deg, ${hexToRgba(
                         venue.color,
                         0.95,
                       )}, ${hexToRgba(venue.color, 0.88)})`
-                    : `linear-gradient(180deg, rgba(60, 60, 60, 0.9), rgba(45, 45, 45, 0.85))`,
-                  borderColor: isSelected
-                    ? hexToRgba(venue.color, 0.95)
-                    : "rgba(80, 80, 80, 0.6)",
-                  boxShadow: isSelected
-                    ? `0 8px 18px ${hexToRgba(venue.color, 0.24)}`
-                    : "0 4px 8px rgba(0, 0, 0, 0.3)",
-                }}
-              >
-                <div className="flex min-w-0 items-center justify-between gap-1">
-                  <div className="text-[10px] font-semibold leading-none text-white/90">
-                    {formatTime(set.startAt)}
-                    <span className="text-white/60">-{formatTime(set.finishAt)}</span>
+                      : `linear-gradient(180deg, rgba(60, 60, 60, 0.9), rgba(45, 45, 45, 0.85))`,
+                    borderColor: isSelected
+                      ? hexToRgba(venue.color, 0.95)
+                      : "rgba(80, 80, 80, 0.6)",
+                    boxShadow: isSelected
+                      ? `0 8px 18px ${hexToRgba(venue.color, 0.24)}`
+                      : "0 4px 8px rgba(0, 0, 0, 0.3)",
+                  }}
+                >
+                  <div className={cn("flex min-w-0 flex-1 flex-col", isSmall ? "justify-center w-full" : "")}>
+                    {!isSmall && (
+                      <div className={cn(
+                        "flex w-full items-center justify-between",
+                        isNarrow ? "gap-0 flex-col items-start" : "gap-1"
+                      )}>
+                        <div className={cn("font-semibold leading-none text-white/90", isNarrow ? "text-[9px]" : "text-[10px]")}>
+                          {formatTime(set.startAt)}
+                          <span className="text-white/60">-{formatTime(set.finishAt)}</span>
+                        </div>
+                        {order ? (
+                          <span className={cn(
+                            "inline-flex shrink-0 items-center justify-center rounded-full bg-black/30 font-bold text-white",
+                            isNarrow ? "h-3 w-3 text-[8px] mt-0.5" : "h-4 w-4 text-[9px]"
+                          )}>
+                            {order}
+                          </span>
+                        ) : null}
+                      </div>
+                    )}
+                    <div className={cn(
+                      "min-w-0 font-bold leading-tight",
+                      isSelected ? "text-white" : "text-gray-300",
+                      isSmall ? "text-[11px] line-clamp-3 mt-0" : "mt-1 text-xs"
+                    )}>
+                      {set.artistName}
+                    </div>
+                    {!isSmall && compactLayout && (
+                      <div className={cn("mt-auto min-w-0 text-[10px] leading-tight", isSelected ? "text-white/78" : "text-gray-400")}>
+                        {set.stageName}
+                      </div>
+                    )}
                   </div>
-                  {order ? (
-                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/30 text-[9px] font-bold text-white">
-                      {order}
-                    </span>
-                  ) : null}
-                </div>
-                <div className={cn("mt-1 min-w-0 text-xs font-bold leading-tight", isSelected ? "text-white" : "text-gray-300")}>
-                  {set.artistName}
-                </div>
-                <div className={cn("mt-auto min-w-0 text-[10px] leading-tight", isSelected ? "text-white/78" : "text-gray-400")}>
-                  {set.stageName}
-                </div>
-              </button>
-            );
-          })})}
+                </button>
+              );
+            })
+          })}
         </div>
       </div>
     </div>

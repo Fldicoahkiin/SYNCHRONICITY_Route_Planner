@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useTranslation } from "@/lib/i18n/client";
 import { runOCR, type OCRResult } from "@/lib/utils/image-import";
 import { timetable } from "@/lib/data/timetable";
+import { useFavorites } from "@/lib/hooks/use-favorites";
 import { formatTime } from "@/lib/utils/route-planner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -251,7 +252,7 @@ function ImportReviewState({
   ocrResult: OCRResult;
   selectedIds: Set<string>;
   dayOverride: 1 | 2 | null;
-  conflicts: Array<{ left: string; right: string; time: string }> | null;
+  conflicts: Array<{ labels: string[]; time: string }> | null;
   onOpenFilePicker: () => void;
   onSetDay: (day: 1 | 2 | null) => void;
   onToggleMatch: (ids: string[]) => void;
@@ -305,13 +306,13 @@ function ImportReviewState({
                 {t("timetable.import.conflictWarning")}
               </div>
               <ul className="space-y-2 text-xs">
-                {conflicts.map((conflict) => (
+                {conflicts.map((conflict, i) => (
                   <li
-                    key={`${conflict.left}-${conflict.right}-${conflict.time}`}
+                    key={i}
                     className="rounded-lg border border-amber-500/15 bg-black/10 px-2.5 py-2"
                   >
                     <div className="font-medium text-amber-200">
-                      {conflict.left} · {conflict.right}
+                      {conflict.labels.join(" · ")}
                     </div>
                     <div className="mt-0.5 text-amber-300/80">{conflict.time}</div>
                   </li>
@@ -410,9 +411,9 @@ function ImportModalFooter({
 }
 
 export function ImportFromImageButton({
-  onImportAction,
+  onDayChange,
 }: {
-  onImportAction: (ids: string[]) => void;
+  onDayChange?: (day: "1" | "2") => void;
 }) {
   const { t } = useTranslation();
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -438,16 +439,33 @@ export function ImportFromImageButton({
         dispatch({ type: "SCAN_SUCCESS", result });
       } catch (err) {
         dispatch({ type: "SCAN_ERROR", error: err instanceof Error ? err.message : String(err) });
+      } finally {
+        // allow re-selecting the same file later
+        if (inputRef.current) {
+          inputRef.current.value = "";
+        }
       }
     },
     []
   );
 
+  const { addFavorites } = useFavorites();
+
   const handleImport = useCallback(() => {
     const ids = Array.from(state.selectedIds);
-    onImportAction(ids);
+    addFavorites(ids);
+
+    if (state.dayOverride && onDayChange) {
+      onDayChange(String(state.dayOverride) as "1" | "2");
+    }
+
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
     dispatch({ type: "RESET" });
-  }, [state.selectedIds, onImportAction]);
+  }, [state.selectedIds, state.dayOverride, addFavorites, onDayChange]);
 
   const conflictsInfo = useMemo(() => {
     if (!state.ocrResult || state.selectedIds.size < 2) return null;
@@ -457,24 +475,54 @@ export function ImportFromImageButton({
       .sort((a, b) => a.startAt - b.startAt);
 
     const conflicts: Array<{
-      left: string;
-      right: string;
+      labels: string[];
       time: string;
     }> = [];
-    for (let i = 0; i < items.length - 1; i++) {
-      if (
-        items[i].day === items[i + 1].day &&
-        items[i].finishAt > items[i + 1].startAt
-      ) {
-        conflicts.push({
-          left: items[i].artistName,
-          right: items[i + 1].artistName,
-          time: `${formatTime(items[i + 1].startAt)} - ${formatTime(
-            items[i].finishAt,
-          )}`,
-        });
+    
+    let currentCluster: typeof items = [];
+    let clusterEnd = -1;
+
+    for (const item of items) {
+      if (currentCluster.length === 0) {
+        currentCluster.push(item);
+        clusterEnd = item.finishAt;
+      } else {
+        const firstItem = currentCluster[0];
+        if (item.day === firstItem.day && item.startAt < clusterEnd) {
+          currentCluster.push(item);
+          clusterEnd = Math.max(clusterEnd, item.finishAt);
+        } else {
+          if (currentCluster.length > 1) {
+            const overlapStart = Math.max(...currentCluster.map(x => x.startAt));
+            const overlapEnd = Math.min(...currentCluster.map(x => x.finishAt));
+            const timeSpan = overlapStart < overlapEnd 
+              ? `${formatTime(overlapStart)} - ${formatTime(overlapEnd)}`
+              : `${formatTime(currentCluster[0].startAt)} - ${formatTime(clusterEnd)}`;
+
+            conflicts.push({
+              labels: currentCluster.map(x => x.artistName),
+              time: timeSpan,
+            });
+          }
+          currentCluster = [item];
+          clusterEnd = item.finishAt;
+        }
       }
     }
+
+    if (currentCluster.length > 1) {
+      const overlapStart = Math.max(...currentCluster.map(x => x.startAt));
+      const overlapEnd = Math.min(...currentCluster.map(x => x.finishAt));
+      const timeSpan = overlapStart < overlapEnd 
+        ? `${formatTime(overlapStart)} - ${formatTime(overlapEnd)}`
+        : `${formatTime(currentCluster[0].startAt)} - ${formatTime(clusterEnd)}`;
+
+      conflicts.push({
+        labels: currentCluster.map(x => x.artistName),
+        time: timeSpan,
+      });
+    }
+    
     return conflicts;
   }, [state.selectedIds, state.ocrResult, state.dayOverride]);
 

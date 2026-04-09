@@ -25,7 +25,7 @@ function readStoredValue<T>(key: string, fallback: T): T {
 
 export function usePersistentState<T>(key: string, defaultValue: T) {
   const [fallback] = useState(defaultValue);
-  const [state, setState] = useState<T>(() => readStoredValue(key, fallback));
+  const [state, setState] = useState<T>(fallback);
 
   useEffect(() => {
     setState(readStoredValue(key, fallback));
