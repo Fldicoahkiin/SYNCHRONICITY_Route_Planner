@@ -17,15 +17,41 @@ interface OrsRouteResponse {
   }>;
 }
 
+function calculateHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3; // metres
+  const φ1 = (lat1 * Math.PI) / 180; // φ, λ in radians
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // in metres
+}
+
+function getFallbackRoute(fromLat: number, fromLng: number, toLat: number, toLng: number) {
+  const straightDistance = calculateHaversineDistance(fromLat, fromLng, toLat, toLng);
+  // Multiply by 1.3 to approximate street network (Manhattan-ish distance)
+  const estimatedDistance = Math.round(straightDistance * 1.3);
+  // Average walking speed ~80 meters per minute (4.8 km/h)
+  const estimatedMinutes = Math.max(1, Math.round(estimatedDistance / 80));
+
+  return NextResponse.json({
+    minutes: estimatedMinutes,
+    distanceMeters: estimatedDistance,
+    geometry: [
+      [fromLat, fromLng],
+      [toLat, toLng],
+    ] as [number, number][],
+    _fallback: true,
+  });
+}
+
 export async function POST(request: NextRequest) {
   const apiKey = process.env.ORS_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "ORS_API_KEY is not configured" },
-      { status: 500 },
-    );
-  }
 
   try {
     const body = (await request.json()) as {
@@ -53,6 +79,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!apiKey) {
+      // Graceful degradation when key is missing (Local Dev without API keys)
+      return getFallbackRoute(fromVenue.lat, fromVenue.lng, toVenue.lat, toVenue.lng);
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), ROUTING_TIMEOUT_MS);
 
@@ -75,21 +106,15 @@ export async function POST(request: NextRequest) {
       });
 
       if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        return NextResponse.json(
-          { error: `Routing API error: ${response.status}`, detail: text },
-          { status: 502 },
-        );
+        // Fallback for API failure (e.g. rate limit, 502) instead of fully crashing the frontend.
+        return getFallbackRoute(fromVenue.lat, fromVenue.lng, toVenue.lat, toVenue.lng);
       }
 
       const payload = (await response.json()) as OrsRouteResponse;
       const route = payload.routes?.[0];
 
       if (!route) {
-        return NextResponse.json(
-          { error: "Routing API returned no route" },
-          { status: 502 },
-        );
+         return getFallbackRoute(fromVenue.lat, fromVenue.lng, toVenue.lat, toVenue.lng);
       }
 
       const coordinates: [number, number][] =

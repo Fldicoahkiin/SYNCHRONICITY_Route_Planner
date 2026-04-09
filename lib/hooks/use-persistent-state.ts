@@ -1,94 +1,92 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 
 type SetStateAction<T> = T | ((prev: T) => T);
 
 const PERSISTENT_STATE_EVENT = "synchronicity:persistent-state";
 
-function readStoredValue<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  const raw = window.localStorage.getItem(key);
-  if (raw === null) {
-    return fallback;
-  }
-
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
 export function usePersistentState<T>(key: string, defaultValue: T) {
   const [fallback] = useState(defaultValue);
-  const [state, setState] = useState<T>(fallback);
 
-  useEffect(() => {
-    setState(readStoredValue(key, fallback));
-  }, [key, fallback]);
+  const getSnapshot = useCallback(() => {
+    return window.localStorage.getItem(key);
+  }, [key]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
+  const getServerSnapshot = useCallback(() => {
+    return null;
+  }, []);
 
-    const syncState = () => {
-      setState(readStoredValue(key, fallback));
-    };
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      const handleStorage = (event: StorageEvent) => {
+        if (event.key === key) onStoreChange();
+      };
 
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === key) {
-        syncState();
-      }
-    };
+      const handleCustomEvent = (event: Event) => {
+        const detail = (event as CustomEvent<{ key: string }>).detail;
+        if (detail?.key === key) onStoreChange();
+      };
 
-    const handleCustomEvent = (event: Event) => {
-      const detail = (event as CustomEvent<{ key: string }>).detail;
-      if (detail?.key === key) {
-        syncState();
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(
-      PERSISTENT_STATE_EVENT,
-      handleCustomEvent as EventListener,
-    );
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(
+      window.addEventListener("storage", handleStorage);
+      window.addEventListener(
         PERSISTENT_STATE_EVENT,
         handleCustomEvent as EventListener,
       );
-    };
-  }, [fallback, key]);
+
+      return () => {
+        window.removeEventListener("storage", handleStorage);
+        window.removeEventListener(
+          PERSISTENT_STATE_EVENT,
+          handleCustomEvent as EventListener,
+        );
+      };
+    },
+    [key],
+  );
+
+  const rawState = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
+
+  const state = useMemo(() => {
+    if (rawState === null) {
+      return fallback;
+    }
+    try {
+      return JSON.parse(rawState) as T;
+    } catch {
+      return fallback;
+    }
+  }, [rawState, fallback]);
 
   const setValue = useCallback(
     (value: SetStateAction<T>) => {
-      setState((current) => {
-        const nextValue =
-          typeof value === "function"
-            ? (value as (prev: T) => T)(current)
-            : value;
+      const currentRaw = window.localStorage.getItem(key);
+      let currentState: T = fallback;
+      if (currentRaw !== null) {
+        try {
+          currentState = JSON.parse(currentRaw) as T;
+        } catch {}
+      }
 
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(key, JSON.stringify(nextValue));
-          window.dispatchEvent(
-            new CustomEvent(PERSISTENT_STATE_EVENT, {
-              detail: { key },
-            }),
-          );
-        }
+      const nextValue =
+        typeof value === "function"
+          ? (value as (prev: T) => T)(currentState)
+          : value;
 
-        return nextValue;
-      });
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(key, JSON.stringify(nextValue));
+        window.dispatchEvent(
+          new CustomEvent(PERSISTENT_STATE_EVENT, {
+            detail: { key },
+          }),
+        );
+      }
     },
-    [key],
+    [key, fallback],
   );
 
   return [state, setValue] as const;
