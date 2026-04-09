@@ -21,6 +21,24 @@ export const venues: Venue[] = [
     color: "#0ea5e9",
   },
   {
+    id: "o-east-2nd",
+    spotId: "1",
+    name: "Spotify O-EAST 2nd Stage",
+    lat: 35.65879761,
+    lng: 139.6955653,
+    area: "A",
+    color: "#38bdf8",
+  },
+  {
+    id: "o-east-3f",
+    spotId: "1",
+    name: "Spotify O-EAST 3F LOBBY",
+    lat: 35.65879761,
+    lng: 139.6955653,
+    area: "A",
+    color: "#7dd3fc",
+  },
+  {
     id: "duo",
     spotId: "3",
     name: "duo MUSIC EXCHANGE",
@@ -55,6 +73,15 @@ export const venues: Venue[] = [
     lng: 139.695366,
     area: "A",
     color: "#f59e0b",
+  },
+  {
+    id: "o-nest-2nd",
+    spotId: "6",
+    name: "Spotify O-nest 2nd",
+    lat: 35.65852251,
+    lng: 139.695366,
+    area: "A",
+    color: "#fbbf24",
   },
   {
     id: "quattro",
@@ -118,6 +145,15 @@ export const venues: Venue[] = [
     lng: 139.6953293,
     area: "A",
     color: "#14b8a6",
+  },
+  {
+    id: "linecube",
+    spotId: "18",
+    name: "Wonder Vision (LINE CUBE SHIBUYA)",
+    lat: 35.66418865,
+    lng: 139.6986612,
+    area: "B",
+    color: "#6366f1",
   }
 ];
 

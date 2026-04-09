@@ -23,7 +23,7 @@ interface ApiTimetable {
 
 interface ApiStage {
   id: string;
-  attributes: { name: string };
+  attributes: { name: string; color_name?: string };
 }
 interface ApiArtist {
   id: string;
@@ -36,9 +36,41 @@ async function readJson(filename: string) {
   return JSON.parse(content);
 }
 
-// Ensure stable mappings between the Fespli API stage names and our IDs
-function inferVenueId(stageName: string): string | null {
+// Stable mapping from known API stage IDs to our internal venue IDs.
+// This takes precedence over name-based inference because stage IDs are stable
+// and sub-stages (e.g. O-EAST 2nd) share the same spot/parent name.
+const stageIdToVenueId = new Map<string, string>([
+  ["1", "o-east"],
+  ["2", "o-east-2nd"],
+  ["3", "duo"],
+  ["4", "o-west"],
+  ["5", "clubasia"],
+  ["6", "o-nest"],
+  ["7", "o-nest-2nd"],
+  ["10", "quattro"],
+  ["11", "veats"],
+  ["12", "www"],
+  ["13", "wwwx"],
+  ["18", "linecube"],
+  ["20", "tokio-tokyo"],
+  ["21", "fows"],
+  ["22", "7thfloor"],
+  ["23", "o-east-3f"],
+  ["25", "duo"], // pre-event stage with same name as main duo stage
+]);
+
+// Fallback name+color_name inference for any new stages not in the hardcoded map above.
+function inferVenueId(stageName: string, colorName?: string): string | null {
   const s = stageName.toLowerCase();
+  const c = (colorName ?? "").toLowerCase();
+
+  // Sub-stages must be checked before parent stages
+  if (c === "east2nd" || s.includes("east 2nd")) return "o-east-2nd";
+  if (c === "east3f" || s.includes("east 3f") || s.includes("3f lobby")) return "o-east-3f";
+  if (c === "nest2nd") return "o-nest-2nd";
+
+  // Main stages
+  if (s.includes("line cube") || s.includes("linecube")) return "linecube";
   if (s.includes("east")) return "o-east";
   if (s.includes("west")) return "o-west";
   if (s.includes("nest")) return "o-nest";
@@ -51,6 +83,7 @@ function inferVenueId(stageName: string): string | null {
   if (s.includes("7thfloor") || s.includes("7th flooor")) return "7thfloor";
   if (s.includes("tokio tokyo")) return "tokio-tokyo";
   if (s.includes("fows") || s.includes("shibuya fows")) return "fows";
+
   return null;
 }
 
@@ -95,24 +128,40 @@ async function main() {
     if (!artistId || !stageId) continue;
 
     const artistName = artistsMap.get(artistId)?.attributes.name ?? `Artist ${artistId}`;
-    const stageName = stagesMap.get(stageId)?.attributes.name ?? `Stage ${stageId}`;
+    const stage = stagesMap.get(stageId);
+    const stageName = stage?.attributes.name ?? `Stage ${stageId}`;
+    const stageColorName = stage?.attributes.color_name;
 
-    const venueId = inferVenueId(stageName);
+    const venueId =
+      stageIdToVenueId.get(stageId) ?? inferVenueId(stageName, stageColorName);
 
-    // According to data/2026/all-festival-dates.json, "1" is probably April 11 (day 1) and "2" is April 12.
-    // If we look at the startAt timestamp, 1775880000 = Sat April 11 2026 13:00 JST.
-    // Let's use startAt to dynamically decide the day relative to 1775952000 (Sunday Midnight boundary).
+    if (!venueId) {
+      console.warn(
+        `⚠️ Skipping unmapped stage: "${stageName}" (id=${stageId}, color=${stageColorName}, artist=${artistName})`
+      );
+      continue;
+    }
+
+    // The app currently only supports the two main festival days.
+    // dateId "100" / "101" are pre/post events that should not be mixed into day 1/2.
+    if (dateId !== "1" && dateId !== "2") {
+      console.warn(
+        `⚠️ Skipping unsupported dateId ${dateId}: "${stageName}" | ${artistName}`
+      );
+      continue;
+    }
+
     const startAt = apiSet.attributes?.start_at;
     const finishAt = apiSet.attributes?.finish_at;
-    if (!startAt || !finishAt) continue;
-    
-    // 1775923200 is Sun, 12 Apr 2026 01:00:00 JST
-    // A cutoff like 1775960000 would be Sunday morning. Let's just use:
-    // If start_at < 1775950000 -> Day 1 (April 11), else Day 2
-    const day = dateId === "1" ? 1 : 2; 
+    if (!startAt || !finishAt) {
+      console.warn(
+        `⚠️ Skipping missing time: "${stageName}" | ${artistName} (start=${startAt}, finish=${finishAt})`
+      );
+      continue;
+    }
 
-    // We noticed 'Talk Live & Rest Space' was orphaned.
-    // It's manually added or unmapped. We'll reconstruct identically.
+    const day = dateId === "1" ? 1 : 2;
+
     outSets.push({
       id: apiSet.id,
       artistId,

@@ -12,56 +12,12 @@ export interface TimetableSet {
 
 export const timetable: TimetableSet[] = [
   {
-    "id": "5003",
-    "artistId": "140",
-    "artistName": "ena mori (Philippines / Japan)",
-    "stageId": "25",
-    "stageName": "duo MUSIC EXCHANGE",
-    "venueId": "duo",
-    "day": 2,
-    "startAt": 1775813400,
-    "finishAt": 1775815500
-  },
-  {
-    "id": "5001",
-    "artistId": "107",
-    "artistName": "FCO.",
-    "stageId": "25",
-    "stageName": "duo MUSIC EXCHANGE",
-    "venueId": "duo",
-    "day": 2,
-    "startAt": 1775816700,
-    "finishAt": 1775818800
-  },
-  {
-    "id": "5002",
-    "artistId": "139",
-    "artistName": "Adult DVD (United Kingdom)",
-    "stageId": "25",
-    "stageName": "duo MUSIC EXCHANGE",
-    "venueId": "duo",
-    "day": 2,
-    "startAt": 1775820000,
-    "finishAt": 1775822100
-  },
-  {
-    "id": "5000",
-    "artistId": "9",
-    "artistName": "toconoma",
-    "stageId": "25",
-    "stageName": "duo MUSIC EXCHANGE",
-    "venueId": "duo",
-    "day": 2,
-    "startAt": 1775823300,
-    "finishAt": 1775825400
-  },
-  {
     "id": "131",
     "artistId": "131",
     "artistName": "Ko Umehara",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 1,
     "startAt": 1775880000,
     "finishAt": 1775883000
@@ -72,7 +28,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ Yuta Takahashi",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 1,
     "startAt": 1775880000,
     "finishAt": 1775883600
@@ -215,7 +171,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ ゆーかり",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 1,
     "startAt": 1775885700,
     "finishAt": 1775887800
@@ -226,7 +182,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "ハク。",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 1,
     "startAt": 1775886300,
     "finishAt": 1775888100
@@ -281,7 +237,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "歌うこと、つくること、続けていくこと\n\nさらさ × エバンズ亜莉沙",
     "stageId": "23",
     "stageName": "O-EAST 3F LOBBY",
-    "venueId": "o-east",
+    "venueId": "o-east-3f",
     "day": 1,
     "startAt": 1775887200,
     "finishAt": 1775889000
@@ -380,7 +336,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ 星原喜一郎",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 1,
     "startAt": 1775889900,
     "finishAt": 1775892000
@@ -446,7 +402,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "水中スピカ",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 1,
     "startAt": 1775892000,
     "finishAt": 1775893800
@@ -523,7 +479,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ hamakyo",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 1,
     "startAt": 1775894100,
     "finishAt": 1775896200
@@ -644,7 +600,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "Dabda (South Korea)",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 1,
     "startAt": 1775897700,
     "finishAt": 1775899500
@@ -666,7 +622,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "CUEW特別セッション：アジア発のアーティストが描くあたらしいグローバル展開\nena mori,野村優太（CUEW主催）",
     "stageId": "23",
     "stageName": "O-EAST 3F LOBBY",
-    "venueId": "o-east",
+    "venueId": "o-east-3f",
     "day": 1,
     "startAt": 1775898000,
     "finishAt": 1775899800
@@ -677,7 +633,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ ゆーかり",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 1,
     "startAt": 1775898300,
     "finishAt": 1775900400
@@ -809,7 +765,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ 星原喜一郎",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 1,
     "startAt": 1775902500,
     "finishAt": 1775904600
@@ -842,7 +798,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "the bercedes menz",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 1,
     "startAt": 1775903400,
     "finishAt": 1775905200
@@ -941,7 +897,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "New Action! ",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 1,
     "startAt": 1775907000,
     "finishAt": 1775910600
@@ -952,7 +908,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "Ko Umehara",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 2,
     "startAt": 1775966400,
     "finishAt": 1775969400
@@ -963,7 +919,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ Yuta Takahashi",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 2,
     "startAt": 1775966400,
     "finishAt": 1775970000
@@ -1095,7 +1051,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ hamakyo",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 2,
     "startAt": 1775972100,
     "finishAt": 1775974200
@@ -1106,7 +1062,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "板歯目",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 2,
     "startAt": 1775972700,
     "finishAt": 1775974500
@@ -1238,7 +1194,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "新東京合同会社のセカンドフェーズとは？\n新東京（アシスタントMC：ノイハウス萌菜）",
     "stageId": "23",
     "stageName": "O-EAST 3F LOBBY",
-    "venueId": "o-east",
+    "venueId": "o-east-3f",
     "day": 2,
     "startAt": 1775976000,
     "finishAt": 1775977800
@@ -1249,7 +1205,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ 星原喜一郎",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 2,
     "startAt": 1775976300,
     "finishAt": 1775978400
@@ -1293,7 +1249,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "スーパー登山部",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 2,
     "startAt": 1775978400,
     "finishAt": 1775980200
@@ -1392,7 +1348,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ ゆーかり",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 2,
     "startAt": 1775980500,
     "finishAt": 1775982600
@@ -1513,7 +1469,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "Bugs of Phonon (Taiwan)",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 2,
     "startAt": 1775984100,
     "finishAt": 1775985900
@@ -1535,7 +1491,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "名古屋音楽シーンの最前線と魅力\nQOOPIE×Suspended 4th×スーパー登山部（アシスタントMC：ノイハウス萌菜）",
     "stageId": "23",
     "stageName": "O-EAST 3F LOBBY",
-    "venueId": "o-east",
+    "venueId": "o-east-3f",
     "day": 2,
     "startAt": 1775984400,
     "finishAt": 1775986200
@@ -1546,7 +1502,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ hamakyo",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 2,
     "startAt": 1775984700,
     "finishAt": 1775986800
@@ -1678,7 +1634,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "DJ 星原喜一郎",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 2,
     "startAt": 1775988900,
     "finishAt": 1775991000
@@ -1711,7 +1667,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "Trooper Salute",
     "stageId": "2",
     "stageName": "O-EAST 2nd Stage",
-    "venueId": "o-east",
+    "venueId": "o-east-2nd",
     "day": 2,
     "startAt": 1775989800,
     "finishAt": 1775992200
@@ -1788,7 +1744,7 @@ export const timetable: TimetableSet[] = [
     "artistName": "New Action! ",
     "stageId": "7",
     "stageName": "O-nest",
-    "venueId": "o-nest",
+    "venueId": "o-nest-2nd",
     "day": 2,
     "startAt": 1775993400,
     "finishAt": 1775997000

@@ -60,16 +60,22 @@ async function main() {
   try {
     const spotsList = await fetchResource("spots");
     const spotsData = [];
+    let failedSpotCount = 0;
     for (const spotRef of spotsList.data ?? []) {
       const spotId = spotRef.id;
-      const spotDetail = await fetchResource(`spots/${spotId}`, "&include_area=true&include_ground_overlay=true&support_html=true");
-      spotsData.push(spotDetail.data);
+      try {
+        const spotDetail = await fetchResource(`spots/${spotId}`, "&include_area=true&include_ground_overlay=true&support_html=true");
+        spotsData.push(spotDetail.data);
+      } catch (spotErr) {
+        failedSpotCount++;
+        console.error(`Failed to fetch spot ${spotId}:`, spotErr);
+      }
     }
     const filePath = path.join(TARGET_DIR, `all-spots.json`);
     await fs.writeFile(filePath, JSON.stringify(cleanData({ data: spotsData }), null, 2), "utf-8");
-    console.log(`\u2714 Saved ${filePath}`);
+    console.log(`\u2714 Saved ${filePath} (${spotsData.length} spots${failedSpotCount > 0 ? `, ${failedSpotCount} failed` : ""})`);
   } catch (err) {
-    console.error(`\u2716 Failed to fetch spots:`, err);
+    console.error(`\u2716 Failed to fetch spots list:`, err);
   }
 
   console.log("Sync complete! Please run 'pnpm prettier --write data/2026' to ensure standard formatting.");
