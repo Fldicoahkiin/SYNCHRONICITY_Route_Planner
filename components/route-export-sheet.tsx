@@ -48,7 +48,7 @@ export const RouteExportSheet = forwardRef<
   return (
     <div
       ref={ref}
-      className="overflow-hidden rounded-[32px] border border-zinc-800 bg-[#030303] p-5 text-zinc-100 shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
+      className="overflow-hidden rounded-[32px] border border-zinc-800 bg-black p-5 text-zinc-100 shadow-[0_24px_80px_rgba(0,0,0,0.35)]"
     >
       <div className="flex items-end justify-between gap-4 border-b border-zinc-800 pb-4">
         <div>

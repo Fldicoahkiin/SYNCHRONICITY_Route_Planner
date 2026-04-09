@@ -104,7 +104,7 @@ export function LocaleSwitcher() {
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="border-zinc-800 bg-[#0a0a0a] text-zinc-100"
+          className="border-zinc-800 bg-background text-zinc-100"
         >
           <SheetHeader>
             <SheetTitle className="text-zinc-100">

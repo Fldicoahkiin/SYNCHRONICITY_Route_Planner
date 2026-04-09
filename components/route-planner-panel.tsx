@@ -1,6 +1,7 @@
 "use client";
 
-import { Chip } from "@heroui/react";
+import { memo } from "react";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/lib/i18n/client";
 import type { PlannedRoute } from "@/lib/utils/route-planner";
 import { ConflictGroupSelector } from "@/components/conflict-group-selector";
@@ -20,7 +21,7 @@ interface RoutePlannerPanelProps {
   className?: string;
 }
 
-export function RoutePlannerPanel({
+export const RoutePlannerPanel = memo(function RoutePlannerPanel({
   route,
   onToggleOption,
   onSelectAllInGroup,
@@ -71,7 +72,7 @@ export function RoutePlannerPanel({
       ) : null}
 
       {hasRisk ? (
-        <div className="rounded-[28px] border border-rose-500/25 bg-rose-500/[0.08] p-4">
+        <div className="rounded-3xl border border-rose-500/25 bg-rose-500/[0.08] p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 h-4 w-4 text-rose-300" />
@@ -88,12 +89,12 @@ export function RoutePlannerPanel({
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Chip variant="secondary" className="border-rose-400/30 bg-black/10 text-rose-100">
+              <Badge className="border-rose-400/30 bg-black/10 text-rose-100">
                 {t("plan.branch.impossible", { count: route.impossibleLegs })}
-              </Chip>
-              <Chip variant="secondary" className="border-amber-400/30 bg-black/10 text-amber-100">
+              </Badge>
+              <Badge className="border-amber-400/30 bg-black/10 text-amber-100">
                 {t("plan.branch.tight", { count: route.tightLegs })}
-              </Chip>
+              </Badge>
             </div>
           </div>
         </div>
@@ -107,4 +108,4 @@ export function RoutePlannerPanel({
       </div>
     </div>
   );
-}
+});

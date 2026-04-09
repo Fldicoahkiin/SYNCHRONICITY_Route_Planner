@@ -92,11 +92,7 @@ const en = {
   },
   browse: {
     title: "Browse",
-    tabs: {
-      timetable: "Timetable",
-      map: "Map",
-      route: "Route",
-    },
+    goToPlanHint: "Check your route from saved sets",
     mapLoading: "Loading map…",
     routeEmpty: "No route planned yet.",
     selectSets: "Pick some sets",

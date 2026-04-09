@@ -1,18 +1,31 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Input, Modal } from "@heroui/react";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Heart, MapPin, Search, X } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
 import { usePersistentState } from "@/lib/hooks/use-persistent-state";
-import { timetable, type TimetableSet } from "@/lib/data/timetable";
-import { venueMap } from "@/lib/data/venues";
 import { formatTime } from "@/lib/utils/route-planner";
 import { ImportFromImageButton } from "@/components/import-from-image";
 import { TimetableBoard } from "@/components/timetable-board";
+import { DaySwitcher } from "@/components/day-switcher";
+import type { TimetableSet } from "@/lib/data/timetable";
+import type { Venue } from "@/lib/data/venues";
 
-export default function TimetablePage() {
+export default function TimetablePage({
+  timetableSets,
+  venuesList,
+}: {
+  timetableSets: TimetableSet[];
+  venuesList: Venue[];
+}) {
   const { t } = useTranslation();
   const [day, setDay] = useDay();
   const [favorites, setFavorites] = usePersistentState<Record<string, boolean>>(
@@ -24,17 +37,22 @@ export default function TimetablePage() {
   const [activeVenueId, setActiveVenueId] = useState<string | null>(null);
   const [selectedSet, setSelectedSet] = useState<TimetableSet | null>(null);
 
+  const venueMap = useMemo(
+    () => new Map(venuesList.map((v) => [v.id, v])),
+    [venuesList],
+  );
+
   const dayNum = day === "1" ? 1 : 2;
   const daySets = useMemo(
-    () => timetable.filter((set) => set.day === dayNum),
-    [dayNum],
+    () => timetableSets.filter((set) => set.day === dayNum),
+    [timetableSets, dayNum],
   );
   const dayVenues = useMemo(
     () =>
       Array.from(new Set(daySets.map((set) => set.venueId || "").filter(Boolean)))
         .map((venueId) => venueMap.get(venueId))
         .filter((venue): venue is NonNullable<typeof venue> => Boolean(venue)),
-    [daySets],
+    [daySets, venueMap],
   );
   const resolvedVenueId =
     activeVenueId && daySets.some((set) => set.venueId === activeVenueId)
@@ -73,8 +91,8 @@ export default function TimetablePage() {
   };
 
   return (
-    <div className="flex min-h-full flex-col bg-[#050505]">
-      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-[#050505]/92 px-4 py-3 backdrop-blur-md md:px-6 md:py-4">
+    <div className="flex min-h-full flex-col bg-background">
+      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-background/92 px-4 py-3 backdrop-blur-md md:px-6 md:py-4">
         <div className="mx-auto max-w-md md:max-w-7xl">
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
@@ -98,41 +116,28 @@ export default function TimetablePage() {
                     });
                   }}
                 />
-                <Button
-                  onPress={() => setShowFavoritesOnly((value) => !value)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                <button
+                  onClick={() => setShowFavoritesOnly((value) => !value)}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                     showFavoritesOnly
-                      ? "bg-blue-500/30 text-blue-300 border border-blue-500/50"
+                      ? "bg-rose-500/30 text-rose-300 border border-rose-500/50"
                       : "bg-zinc-800/50 text-zinc-400 border border-zinc-700 hover:border-zinc-600"
                   }`}
                 >
                   <Heart className={`h-4 w-4 ${showFavoritesOnly ? "fill-current" : ""}`} />
                   {t("timetable.favoritesOnly")}
-                </Button>
+                </button>
               </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-[18rem_minmax(0,1fr)] md:items-center">
-              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-1">
-                <button
-                  className={`h-9 rounded-xl text-sm font-medium transition-colors ${
-                    day === "1" ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
-                  }`}
-                  onClick={() => setDay("1")}
-                  aria-label={t("timetable.tabs.day1")}
-                >
-                  {t("timetable.tabs.day1")}
-                </button>
-                <button
-                  className={`h-9 rounded-xl text-sm font-medium transition-colors ${
-                    day === "2" ? "bg-zinc-100 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
-                  }`}
-                  onClick={() => setDay("2")}
-                  aria-label={t("timetable.tabs.day2")}
-                >
-                  {t("timetable.tabs.day2")}
-                </button>
-              </div>
+              <DaySwitcher
+                value={day}
+                onChangeAction={setDay}
+                day1Label={t("timetable.tabs.day1")}
+                day2Label={t("timetable.tabs.day2")}
+                className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-1 [&_[data-slot='tabs-list']]:bg-transparent"
+              />
 
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -141,7 +146,7 @@ export default function TimetablePage() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("timetable.searchPlaceholder")}
                   aria-label={t("timetable.searchPlaceholder")}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 pl-9 pr-10 text-zinc-200"
+                  className="w-full rounded-2xl border-zinc-800 bg-zinc-950/60 pl-9 pr-10 text-zinc-200"
                 />
                 {query ? (
                   <button
@@ -210,7 +215,7 @@ export default function TimetablePage() {
           </div>
 
           {visibleSets.length === 0 ? (
-            <div className="rounded-[28px] border border-zinc-800 bg-zinc-950/70 px-5 py-12 text-center text-sm text-zinc-400">
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-950/70 px-5 py-12 text-center text-sm text-zinc-400">
               {query.trim() ? t("timetable.noResults") : t("timetable.empty")}
             </div>
           ) : (
@@ -225,18 +230,26 @@ export default function TimetablePage() {
         </div>
       </main>
 
-      <Modal.Root
-        isOpen={!!selectedSet}
+      <Dialog
+        open={!!selectedSet}
         onOpenChange={(open) => {
           if (!open) {
             setSelectedSet(null);
           }
         }}
       >
-        <Modal.Backdrop className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-        <Modal.Container className="fixed inset-x-0 bottom-0 z-50 w-full sm:bottom-auto sm:inset-y-auto sm:left-1/2 sm:top-1/2 sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2">
-          <Modal.Dialog className="rounded-t-[28px] border border-zinc-800 bg-[#050505] outline-none sm:rounded-[28px]">
-            {selectedSet ? (
+        <DialogContent
+          showCloseButton={false}
+          className="rounded-t-3xl border border-zinc-800 bg-background sm:rounded-3xl"
+        >
+          {selectedSet ? (
+            <>
+              <DialogTitle className="sr-only">
+                {selectedSet.artistName}
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                {formatTime(selectedSet.startAt)} - {formatTime(selectedSet.finishAt)} @ {venueMap.get(selectedSet.venueId || "")?.name ?? selectedSet.stageName}
+              </DialogDescription>
               <div className="p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -251,12 +264,14 @@ export default function TimetablePage() {
                       <span>{venueMap.get(selectedSet.venueId || "")?.name ?? selectedSet.stageName}</span>
                     </div>
                   </div>
-                  <Modal.CloseTrigger
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSet(null)}
                     aria-label={t("common.close")}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 text-zinc-400"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200"
                   >
                     <X className="h-4 w-4" />
-                  </Modal.CloseTrigger>
+                  </button>
                 </div>
 
                 <div className="mt-5 space-y-3">
@@ -267,7 +282,7 @@ export default function TimetablePage() {
                     onClick={() => toggleFavorite(selectedSet.id)}
                     className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                       favorites[selectedSet.id]
-                        ? "bg-blue-500/30 text-blue-300 border border-blue-500/50 hover:bg-blue-500/40"
+                        ? "bg-rose-500/30 text-rose-300 border border-rose-500/50 hover:bg-rose-500/40"
                         : "bg-zinc-800/50 text-zinc-300 border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800/70"
                     }`}
                   >
@@ -278,10 +293,10 @@ export default function TimetablePage() {
                   </button>
                 </div>
               </div>
-            ) : null}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Root>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

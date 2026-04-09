@@ -7,7 +7,15 @@ import { runOCR, type OCRResult } from "@/lib/utils/image-import";
 import { timetable } from "@/lib/data/timetable";
 import { formatTime } from "@/lib/utils/route-planner";
 import { cn } from "@/lib/utils";
-import { Modal, Button, Chip } from "@heroui/react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Upload,
   ScanLine,
@@ -130,17 +138,17 @@ function ImportModalHeader({ stage }: { stage: Stage }) {
   const { t } = useTranslation();
 
   return (
-    <Modal.Header className="flex flex-col gap-1.5 border-b border-zinc-800/50 p-5 pr-14">
-      <Modal.Heading className="bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-xl font-bold text-transparent">
+    <div className="flex flex-col gap-1.5 border-b border-zinc-800/50 p-5 pr-14">
+      <div className="bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-xl font-bold text-transparent">
         {t("timetable.import.title")}
-      </Modal.Heading>
+      </div>
       <div className="text-sm font-medium text-zinc-500">
         {stage === "select" && t("timetable.import.selectImage")}
         {stage === "scanning" && t("timetable.import.scanning")}
         {stage === "review" && t("timetable.import.reviewMatches")}
         {stage === "done" && t("timetable.import.done")}
       </div>
-    </Modal.Header>
+    </div>
   );
 }
 
@@ -205,7 +213,6 @@ function ImportScanningState({
             alt="Timetable screenshot"
             width={1200}
             height={2400}
-            unoptimized
             className="h-48 w-full object-contain"
           />
         </div>
@@ -260,7 +267,6 @@ function ImportReviewState({
             alt="Timetable screenshot"
             width={1200}
             height={2400}
-            unoptimized
             className="h-44 w-full object-contain"
           />
         </div>
@@ -273,16 +279,11 @@ function ImportReviewState({
       ) : (
         <>
           <div className="mt-2 flex items-center justify-between">
-            <Chip
-              size="sm"
-              variant="soft"
-              color="accent"
-              className="text-xs font-semibold uppercase tracking-wide"
-            >
+            <Badge className="text-xs font-semibold uppercase tracking-wide border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
               {t("timetable.import.matchesFound", {
                 count: ocrResult.matches.length,
               })}
-            </Chip>
+            </Badge>
             <div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
               <span>{t("timetable.import.dayLabel")}:</span>
               <select
@@ -359,7 +360,7 @@ function ImportReviewState({
 
           <Button
             variant="ghost"
-            onPress={onOpenFilePicker}
+            onClick={onOpenFilePicker}
             className="w-full text-zinc-300 hover:text-zinc-100 sm:w-auto"
           >
             <RefreshCw className="h-4 w-4" />
@@ -385,11 +386,11 @@ function ImportModalFooter({
   const { t } = useTranslation();
 
   return (
-    <Modal.Footer className="flex flex-col gap-3 border-t border-zinc-800/50 p-5 sm:flex-row">
+    <div className="flex flex-col gap-3 border-t border-zinc-800/50 p-5 sm:flex-row">
       {stage === "review" ? (
         <Button
-          onPress={onImport}
-          isDisabled={selectedCount === 0}
+          onClick={onImport}
+          disabled={selectedCount === 0}
           className="w-full bg-cyan-500 font-bold text-white shadow-lg hover:bg-cyan-600 sm:w-auto"
         >
           {t("timetable.import.confirm", { count: selectedCount })}
@@ -398,13 +399,13 @@ function ImportModalFooter({
       {stage !== "scanning" ? (
         <Button
           variant="ghost"
-          onPress={onClose}
+          onClick={onClose}
           className="w-full font-medium text-zinc-400 hover:text-zinc-200 sm:w-auto"
         >
           {t("timetable.import.cancel")}
         </Button>
       ) : null}
-    </Modal.Footer>
+    </div>
   );
 }
 
@@ -481,84 +482,85 @@ export function ImportFromImageButton({
     inputRef.current?.click();
   }, []);
 
+  const handleOpenChange = useCallback((isOpen: boolean) => {
+    if (!isOpen) {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+      dispatch({ type: "RESET" });
+    }
+  }, []);
 
   return (
     <>
       <Button
-        onPress={() => dispatch({ type: "OPEN" })}
+        onClick={() => dispatch({ type: "OPEN" })}
         variant="outline"
         className="flex h-8 items-center justify-center gap-1.5 rounded-lg border-zinc-700 bg-zinc-800/80 px-3 text-xs font-semibold text-zinc-300 hover:border-zinc-500 hover:bg-zinc-700 hover:text-zinc-100"
       >
         <ImportTriggerButton />
       </Button>
 
-      <Modal.Root
-        isOpen={state.open}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            if (objectUrlRef.current) {
-              URL.revokeObjectURL(objectUrlRef.current);
-              objectUrlRef.current = null;
-            }
-            dispatch({ type: "RESET" });
-          }
-        }}
-      >
-        <Modal.Backdrop className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-        <Modal.Container className="fixed inset-x-0 bottom-0 z-50 w-full sm:bottom-auto sm:inset-y-auto sm:top-[50%] sm:left-[50%] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-md bg-[#0a0a0a] border border-zinc-800 sm:rounded-2xl rounded-t-2xl shadow-2xl">
-          <Modal.Dialog className="outline-none">
-            {({ close }) => (
-              <div className="relative">
-                <Modal.CloseTrigger
-                  aria-label={t("common.close")}
-                  className="absolute right-4 top-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-zinc-900 border border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </Modal.CloseTrigger>
-                <ImportModalHeader stage={state.stage} />
+      <Dialog open={state.open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          showCloseButton={false}
+          className="fixed inset-x-0 bottom-0 z-50 w-full max-w-none translate-x-0 translate-y-0 rounded-b-none rounded-t-2xl border border-zinc-800 bg-background p-0 shadow-2xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl"
+        >
+          <DialogTitle className="sr-only">
+            {t("timetable.import.title")}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t("timetable.import.selectImage")}
+          </DialogDescription>
+          <div className="relative">
+            <DialogClose
+              aria-label={t("common.close")}
+              className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-400 outline-none transition-colors hover:bg-zinc-800 hover:text-zinc-200 focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="h-4 w-4" />
+            </DialogClose>
+            <ImportModalHeader stage={state.stage} />
 
-                <Modal.Body className="py-6 px-5 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                  {state.stage === "select" ? (
-                    <ImportSelectState
-                      error={state.error}
-                      inputRef={inputRef}
-                      onFileChange={handleFileChange}
-                      onOpenFilePicker={openFilePicker}
-                    />
-                  ) : null}
-
-                  {state.stage === "scanning" ? (
-                    <ImportScanningState imageUrl={state.imageUrl} progress={state.progress} />
-                  ) : null}
-
-                  {state.stage === "review" && state.ocrResult ? (
-                    <ImportReviewState
-                      imageUrl={state.imageUrl}
-                      ocrResult={state.ocrResult}
-                      selectedIds={state.selectedIds}
-                      dayOverride={state.dayOverride}
-                      conflicts={conflictsInfo}
-                      onOpenFilePicker={openFilePicker}
-                      onSetDay={(day) => dispatch({ type: "SET_DAY", day })}
-                      onToggleMatch={(ids) => dispatch({ type: "TOGGLE_ALL", ids })}
-                    />
-                  ) : null}
-                </Modal.Body>
-
-                <ImportModalFooter
-                  stage={state.stage}
-                  selectedCount={state.selectedIds.size}
-                  onImport={() => {
-                    handleImport();
-                    close();
-                  }}
-                  onClose={close}
+            <div className="px-5 py-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              {state.stage === "select" ? (
+                <ImportSelectState
+                  error={state.error}
+                  inputRef={inputRef}
+                  onFileChange={handleFileChange}
+                  onOpenFilePicker={openFilePicker}
                 />
-              </div>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Root>
+              ) : null}
+
+              {state.stage === "scanning" ? (
+                <ImportScanningState imageUrl={state.imageUrl} progress={state.progress} />
+              ) : null}
+
+              {state.stage === "review" && state.ocrResult ? (
+                <ImportReviewState
+                  imageUrl={state.imageUrl}
+                  ocrResult={state.ocrResult}
+                  selectedIds={state.selectedIds}
+                  dayOverride={state.dayOverride}
+                  conflicts={conflictsInfo}
+                  onOpenFilePicker={openFilePicker}
+                  onSetDay={(day) => dispatch({ type: "SET_DAY", day })}
+                  onToggleMatch={(ids) => dispatch({ type: "TOGGLE_ALL", ids })}
+                />
+              ) : null}
+            </div>
+
+            <ImportModalFooter
+              stage={state.stage}
+              selectedCount={state.selectedIds.size}
+              onImport={() => {
+                handleImport();
+              }}
+              onClose={() => handleOpenChange(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

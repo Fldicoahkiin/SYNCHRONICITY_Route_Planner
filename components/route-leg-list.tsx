@@ -4,6 +4,7 @@ import { venueMap } from "@/lib/data/venues";
 import type { PlannedRoute } from "@/lib/utils/route-planner";
 import { formatTime } from "@/lib/utils/route-planner";
 import { useTranslation } from "@/lib/i18n/client";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Navigation, ArrowRight } from "lucide-react";
 
@@ -27,23 +28,23 @@ export function RouteLegList({
         return (
           <div
             key={leg.set.id}
-            className="rounded-[24px] border border-zinc-800 bg-zinc-950/75 px-4 py-4"
+            className="rounded-2xl border border-zinc-800 bg-zinc-950/75 px-3 py-3"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-xs font-semibold tracking-[0.14em] text-zinc-500 uppercase">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
                   {formatTime(leg.set.startAt)} - {formatTime(leg.set.finishAt)}
                 </div>
-                <div className="mt-1 text-lg font-semibold text-zinc-50">
+                <div className="mt-0.5 text-base font-semibold text-zinc-50">
                   {leg.set.artistName}
                 </div>
-                <div className="mt-1 text-sm text-zinc-400">
+                <div className="text-xs text-zinc-400">
                   {venue?.name ?? leg.set.stageName}
                 </div>
               </div>
               {venue ? (
                 <span
-                  className="mt-1 inline-flex h-3 w-3 rounded-full"
+                  className="mt-0.5 inline-flex h-3 w-3 rounded-full"
                   style={{ backgroundColor: venue.color }}
                 />
               ) : null}
@@ -52,38 +53,50 @@ export function RouteLegList({
             {leg.nextSet && nextVenue ? (
               <div
                 className={cn(
-                  "mt-4 rounded-2xl border px-3 py-3",
+                  "mt-3 border-t pt-3",
                   leg.status === "impossible"
-                    ? "border-rose-500/20 bg-rose-500/[0.05]"
+                    ? "border-rose-500/20"
                     : leg.status === "tight"
-                      ? "border-amber-500/20 bg-amber-500/[0.05]"
-                      : "border-cyan-500/20 bg-cyan-500/[0.05]",
+                      ? "border-amber-500/20"
+                      : "border-cyan-500/20",
                 )}
               >
-                <div className="flex items-center gap-2 text-sm font-medium text-zinc-100">
-                  <Navigation className="h-4 w-4" />
-                  <span>{venue?.name}</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-zinc-500" />
-                  <span>{nextVenue.name}</span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-300">
+                  <Navigation className="h-3.5 w-3.5 text-zinc-500" />
+                  <span className="font-medium">{venue?.name}</span>
+                  <ArrowRight className="h-3 w-3 text-zinc-600" />
+                  <span className="font-medium">{nextVenue.name}</span>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full border border-zinc-800 bg-black/20 px-2.5 py-1 text-zinc-300">
+
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="border-zinc-800 bg-black/20 text-zinc-300"
+                  >
                     {t("plan.leg.gap", { minutes: leg.gapMinutes })}
-                  </span>
-                  <span className="rounded-full border border-zinc-800 bg-black/20 px-2.5 py-1 text-zinc-300">
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="border-zinc-800 bg-black/20 text-zinc-300"
+                  >
                     {t("plan.leg.walk", { minutes: leg.walkMinutes })}
-                  </span>
-                  <span className="rounded-full border border-zinc-800 bg-black/20 px-2.5 py-1 text-zinc-300">
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="border-zinc-800 bg-black/20 text-zinc-300"
+                  >
                     {t("plan.leg.buffer", { minutes: leg.bufferMinutes })}
+                  </Badge>
+
+                  <span className="text-[10px] text-zinc-500">
+                    {leg.travelSource === "route-api"
+                      ? t("plan.leg.apiSource")
+                      : leg.travelSource === "same-venue"
+                        ? t("plan.leg.sameVenue")
+                        : t("plan.leg.matrixSource")}
                   </span>
                 </div>
-                <div className="mt-2 text-xs text-zinc-400">
-                  {leg.travelSource === "route-api"
-                    ? t("plan.leg.apiSource")
-                    : leg.travelSource === "same-venue"
-                      ? t("plan.leg.sameVenue")
-                      : t("plan.leg.matrixSource")}
-                </div>
+
                 {leg.status === "impossible" ? (
                   <div className="mt-2 text-xs font-medium text-rose-300">
                     {t("plan.leg.conflictAdvice")}

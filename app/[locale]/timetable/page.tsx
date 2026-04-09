@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import TimetablePageClient from "./timetable-screen";
 import { getPageMetadata } from "@/lib/i18n/page-metadata";
+import { timetable } from "@/lib/data/timetable";
+import { venues } from "@/lib/data/venues";
 import type { Locale } from "@/lib/i18n/settings";
 
 export async function generateMetadata({
@@ -13,5 +15,5 @@ export async function generateMetadata({
 }
 
 export default function TimetablePage() {
-  return <TimetablePageClient />;
+  return <TimetablePageClient timetableSets={timetable} venuesList={venues} />;
 }

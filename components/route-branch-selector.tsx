@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, Chip } from "@heroui/react";
+import { memo } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/lib/i18n/client";
 import type { ConflictGroup, PlannedRouteBranch } from "@/lib/utils/route-planner";
 import { cn } from "@/lib/utils";
@@ -15,7 +17,7 @@ interface RouteBranchSelectorProps {
   className?: string;
 }
 
-export function RouteBranchSelector({
+export const RouteBranchSelector = memo(function RouteBranchSelector({
   branches,
   conflictGroups,
   focusedBranchId,
@@ -38,7 +40,7 @@ export function RouteBranchSelector({
   return (
     <section
       className={cn(
-        "rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-4",
+        "rounded-3xl border border-zinc-800 bg-zinc-950/70 p-4",
         className,
       )}
     >
@@ -52,12 +54,11 @@ export function RouteBranchSelector({
             {t("plan.branch.description", { count: branches.length })}
           </p>
         </div>
-        <Chip
-          variant="secondary"
+        <Badge
           className="border-zinc-700 bg-zinc-900/60 text-zinc-300"
         >
           {t("plan.branch.count", { count: branches.length })}
-        </Chip>
+        </Badge>
       </div>
 
       {branchOverflow ? (
@@ -96,26 +97,24 @@ export function RouteBranchSelector({
                       {t("plan.branch.label", { index: index + 1 })}
                     </h3>
                     {isFocused ? (
-                      <Chip
-                        variant="secondary"
+                      <Badge
                         className="border-cyan-500/40 bg-cyan-500/10 text-cyan-200"
                       >
                         {t("plan.branch.current")}
-                      </Chip>
+                      </Badge>
                     ) : null}
                   </div>
                   <p className="mt-1 text-xs text-zinc-500">{choiceNames}</p>
                 </div>
                 <Button
                   size="sm"
-                  variant={isFocused ? "primary" : "outline"}
                   className={cn(
                     "min-w-[88px] text-xs font-semibold",
                     isFocused
-                      ? "bg-cyan-400 text-black"
-                      : "border-zinc-700 bg-zinc-900/70 text-zinc-200 hover:bg-zinc-800",
+                      ? "bg-cyan-400 text-black hover:bg-cyan-300"
+                      : "border border-zinc-700 bg-zinc-900/70 text-zinc-200 hover:bg-zinc-800",
                   )}
-                  onPress={() => onFocusBranch(branch.id)}
+                  onClick={() => onFocusBranch(branch.id)}
                 >
                   {isFocused ? (
                     <span className="inline-flex items-center gap-1">
@@ -129,11 +128,10 @@ export function RouteBranchSelector({
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <Chip variant="secondary" className="border-zinc-700 bg-zinc-900/60 text-zinc-300">
+                <Badge className="border-zinc-700 bg-zinc-900/60 text-zinc-300">
                   {t("plan.branch.totalSets", { count: branch.totalSets })}
-                </Chip>
-                <Chip
-                  variant="secondary"
+                </Badge>
+                <Badge
                   className={cn(
                     branch.impossibleLegs > 0
                       ? "border-rose-500/40 bg-rose-500/10 text-rose-200"
@@ -141,9 +139,8 @@ export function RouteBranchSelector({
                   )}
                 >
                   {t("plan.branch.impossible", { count: branch.impossibleLegs })}
-                </Chip>
-                <Chip
-                  variant="secondary"
+                </Badge>
+                <Badge
                   className={cn(
                     branch.tightLegs > 0
                       ? "border-amber-500/40 bg-amber-500/10 text-amber-200"
@@ -151,7 +148,7 @@ export function RouteBranchSelector({
                   )}
                 >
                   {t("plan.branch.tight", { count: branch.tightLegs })}
-                </Chip>
+                </Badge>
               </div>
             </div>
           );
@@ -159,4 +156,4 @@ export function RouteBranchSelector({
       </div>
     </section>
   );
-}
+});

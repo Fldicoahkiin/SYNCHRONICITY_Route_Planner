@@ -48,17 +48,20 @@ export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
 
   const { overrides, isLoading, hasRouteApiError } = useRouteDirections(baseRoute.focusedBranch);
 
-  const route = useMemo(
-    () =>
-      planRoute(
-        favorites,
-        day,
-        overrides,
-        groupSelections,
-        focusedBranchId,
-      ),
-    [favorites, day, overrides, groupSelections, focusedBranchId],
-  );
+  const hasOverrides = Object.keys(overrides).length > 0;
+
+  const route = useMemo(() => {
+    if (!hasOverrides) {
+      return baseRoute;
+    }
+    return planRoute(
+      favorites,
+      day,
+      overrides,
+      groupSelections,
+      focusedBranchId,
+    );
+  }, [baseRoute, favorites, day, hasOverrides, overrides, groupSelections, focusedBranchId]);
 
   useEffect(() => {
     if (!isHydrated) {

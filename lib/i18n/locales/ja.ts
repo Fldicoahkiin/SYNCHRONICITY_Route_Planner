@@ -92,11 +92,7 @@ const ja = {
   },
   browse: {
     title: "一覧",
-    tabs: {
-      timetable: "タイムテーブル",
-      map: "地図",
-      route: "ルート",
-    },
+    goToPlanHint: "保存したセットからルートを確認",
     mapLoading: "地図を読み込み中…",
     routeEmpty: "まだルートは組まれていません。",
     selectSets: "公演を選ぶ",

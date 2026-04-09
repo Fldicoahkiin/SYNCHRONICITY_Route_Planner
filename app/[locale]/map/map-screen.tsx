@@ -6,12 +6,13 @@ import { useTranslation } from "@/lib/i18n/client";
 import { useDay } from "@/lib/hooks/use-day";
 import { usePersistentState } from "@/lib/hooks/use-persistent-state";
 import { usePlannedRoute } from "@/lib/hooks/use-planned-route";
-import { timetable } from "@/lib/data/timetable";
 import { buildAppleMapsRouteUrl, buildGoogleMapsRouteUrl } from "@/lib/utils/map-urls";
 import { getRouteExportStops } from "@/lib/utils/routing";
 import { RoutePlannerPanel } from "@/components/route-planner-panel";
+import { DaySwitcher } from "@/components/day-switcher";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import type { TimetableSet } from "@/lib/data/timetable";
 
 function MapLoading() {
   const { t } = useTranslation();
@@ -28,7 +29,11 @@ const VenueMap = dynamic(() => import("@/components/venue-map"), {
   loading: () => <MapLoading />,
 });
 
-export default function MapPage() {
+export default function MapPage({
+  timetableSets,
+}: {
+  timetableSets: TimetableSet[];
+}) {
   const { t } = useTranslation();
   const [day, setDay] = useDay();
   const [routeOpen, setRouteOpen] = useState(true);
@@ -39,12 +44,12 @@ export default function MapPage() {
 
   const dayNum = day === "1" ? 1 : 2;
   const daySets = useMemo(
-    () => timetable.filter((set) => set.day === dayNum),
-    [dayNum],
+    () => timetableSets.filter((set) => set.day === dayNum),
+    [timetableSets, dayNum],
   );
   const favoriteSets = useMemo(
-    () => timetable.filter((set) => favorites[set.id]),
-    [favorites],
+    () => timetableSets.filter((set) => favorites[set.id]),
+    [timetableSets, favorites],
   );
   const dayFavoriteSets = useMemo(
     () => daySets.filter((set) => favorites[set.id]),
@@ -71,8 +76,8 @@ export default function MapPage() {
   const canOpenRoute = exportStops.length > 1;
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="absolute left-0 right-0 top-0 z-[1000] border-b border-zinc-800/80 bg-[#0a0a0a]/80 px-4 py-3 backdrop-blur md:left-56 md:px-6 md:py-4">
+    <div className="flex h-full flex-col bg-background">
+      <header className="absolute left-0 right-0 top-0 z-[1000] border-b border-zinc-800/80 bg-background/80 px-4 py-3 backdrop-blur md:left-56 md:px-6 md:py-4">
         <div className="mx-auto max-w-md md:max-w-6xl">
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-semibold tracking-tight md:text-[1.7rem]">
@@ -82,40 +87,18 @@ export default function MapPage() {
               {t("map.selectedCount", { count: dayFavoriteSets.length })}
             </span>
           </div>
-          <div className="mt-3 flex w-full shrink-0 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/80 p-1 shadow-sm">
-            <button
-              className={`flex h-8 flex-1 items-center justify-center rounded-md text-xs transition-all ${
-                day === "1"
-                  ? "bg-zinc-800 font-medium text-cyan-400 shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
-              }`}
-              onClick={() => {
-                setDay("1");
-                document
-                  .getElementById("main-scroll")
-                  ?.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              aria-label={t("map.tabs.day1")}
-            >
-              {t("map.tabs.day1")}
-            </button>
-            <button
-              className={`flex h-8 flex-1 items-center justify-center rounded-md text-xs transition-all ${
-                day === "2"
-                  ? "bg-zinc-800 font-medium text-cyan-400 shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
-              }`}
-              onClick={() => {
-                setDay("2");
-                document
-                  .getElementById("main-scroll")
-                  ?.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              aria-label={t("map.tabs.day2")}
-            >
-              {t("map.tabs.day2")}
-            </button>
-          </div>
+          <DaySwitcher
+            value={day}
+            onChangeAction={(value) => {
+              setDay(value);
+              document
+                .getElementById("main-scroll")
+                ?.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            day1Label={t("map.tabs.day1")}
+            day2Label={t("map.tabs.day2")}
+            className="mt-3 w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900/80 p-1 shadow-sm md:max-w-sm [&_[data-slot='tabs-list']]:bg-transparent"
+          />
         </div>
       </header>
 
@@ -125,7 +108,7 @@ export default function MapPage() {
         {route.totalSets > 0 ? (
           <div
             className={cn(
-              "pointer-events-none absolute z-[1000] overflow-hidden rounded-[28px] border border-zinc-800 bg-[#0a0a0a]/92 backdrop-blur transition-all",
+              "pointer-events-none absolute z-[1000] overflow-hidden rounded-3xl border border-zinc-800 bg-background/92 backdrop-blur transition-all",
               routeOpen
                 ? "bottom-4 left-4 right-4 max-h-[72vh] md:bottom-4 md:left-auto md:right-6 md:top-[118px] md:w-[440px] md:max-h-[calc(100%-134px)]"
                 : "bottom-4 right-4 w-auto",

@@ -30,7 +30,7 @@ export default async function RootLayout({
 
   return (
     <html lang={htmlLang} className="h-full antialiased dark">
-      <body className="min-h-full bg-[#0a0a0a] text-zinc-100">
+      <body className="min-h-full bg-background text-zinc-100">
         {children}
       </body>
     </html>

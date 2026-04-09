@@ -92,11 +92,7 @@ const zh = {
   },
   browse: {
     title: "浏览",
-    tabs: {
-      timetable: "时间表",
-      map: "地图",
-      route: "路线",
-    },
+    goToPlanHint: "查看已保存场次的路线",
     mapLoading: "地图加载中…",
     routeEmpty: "还没有规划路线",
     selectSets: "选择演出",

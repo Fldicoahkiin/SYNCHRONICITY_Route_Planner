@@ -1,4 +1,4 @@
-import Tesseract, { createWorker, type Worker } from "tesseract.js";
+import type { Worker } from "tesseract.js";
 import { timetable, type TimetableSet } from "@/lib/data/timetable";
 import { levenshteinDistance } from "./fuzzy-match";
 
@@ -1206,6 +1206,7 @@ async function createOCRWorker(
     }
   };
 
+  const { createWorker } = await import("tesseract.js");
   return createWorker("eng", undefined, { logger });
 }
 
@@ -1306,9 +1307,10 @@ export async function runOCR(
     totalJobs: regions.length,
   };
   const worker = await createOCRWorker(progressState, onProgress);
+  const tesseractModule = await import("tesseract.js");
 
   await worker.setParameters({
-    tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT,
+    tessedit_pageseg_mode: tesseractModule.PSM.SPARSE_TEXT,
     preserve_interword_spaces: "1",
   });
 

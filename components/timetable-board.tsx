@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { venues, venueMap } from "@/lib/data/venues";
 import type { TimetableSet } from "@/lib/data/timetable";
 import { formatTime } from "@/lib/utils/route-planner";
@@ -76,7 +76,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
-export function TimetableBoard({
+export const TimetableBoard = memo(function TimetableBoard({
   sets,
   frameSets,
   selectedIds,
@@ -140,13 +140,13 @@ export function TimetableBoard({
   }, [timeRange.endMinutes, timeRange.startMinutes]);
 
   return (
-    <div className={cn("group relative overflow-auto rounded-[28px] border border-zinc-800 bg-[#050505]", className)}>
+    <div className={cn("group relative overflow-auto rounded-3xl border border-zinc-800 bg-background", className)}>
       {/* Horizontal scroll indicator gradient - left */}
       <div className="pointer-events-none sticky left-0 top-0 z-40 h-full w-0.5 bg-gradient-to-b from-cyan-500/60 via-cyan-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-      
+
       {/* Horizontal scroll indicator gradient - right */}
       <div className="pointer-events-none sticky right-0 top-0 z-40 h-full w-0.5 bg-gradient-to-b from-cyan-500/60 via-cyan-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-      
+
       <div
         className="relative min-w-max"
         style={{
@@ -154,8 +154,8 @@ export function TimetableBoard({
           height: HEADER_HEIGHT + timeRange.height,
         }}
       >
-        <div className="sticky top-0 z-20 flex h-11 border-b border-zinc-800 bg-[#050505]/95 backdrop-blur">
-          <div className="sticky left-0 z-30 w-[54px] border-r border-zinc-800 bg-[#050505]/95" />
+        <div className="sticky top-0 z-20 flex h-11 border-b border-zinc-800 bg-background/95 backdrop-blur">
+          <div className="sticky left-0 z-30 w-[54px] border-r border-zinc-800 bg-background/95" />
           {visibleVenues.map((venue) => (
             <div
               key={venue.id}
@@ -196,7 +196,7 @@ export function TimetableBoard({
                   className="sticky left-0 z-10 flex h-0 w-[54px] justify-center"
                   style={{ top }}
                 >
-                  <span className="translate-y-[-8px] rounded-full bg-[#050505] px-1 text-[10px] font-medium text-zinc-500">
+                  <span className="translate-y-[-8px] rounded-full bg-background px-1 text-[10px] font-medium text-zinc-500">
                     {label}
                   </span>
                 </div>
@@ -295,4 +295,4 @@ export function TimetableBoard({
       </div>
     </div>
   );
-}
+});

@@ -187,7 +187,6 @@ export default function GoogleMapsEmbed({
               src={mapUrl}
               alt="SYNCHRONICITY Route Map"
               fill
-              unoptimized
               sizes="(max-width: 768px) 100vw, 600px"
               className="object-cover"
             />
@@ -211,7 +210,7 @@ export default function GoogleMapsEmbed({
 
       {/* Venue List */}
       {routeVenueIds.length > 0 && (
-        <div className="bg-[#0a0a0a] border-t border-zinc-800 max-h-[40%] overflow-y-auto">
+        <div className="bg-background border-t border-zinc-800 max-h-[40%] overflow-y-auto">
           <div className="p-3 space-y-2">
             {routeVenueIds.map((venueId, index) => {
               const venue = verifiedVenueMap.get(venueId);
