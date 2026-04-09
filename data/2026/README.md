@@ -1,20 +1,36 @@
-# SYNCHRONICITY'26  festival data
+# SYNCHRONICITY'26 Festival Data
 
-This directory contains raw festival data for **SYNCHRONICITY'26** (April 11–12, 2026, Shibuya).
+This repository contains local caches of raw festival data for **SYNCHRONICITY'26** (April 11–12, 2026, Shibuya).
 
-## What is here
+## Contents
 
-| File | Description |
-|------|-------------|
-| `all-artists.json` | Official artist lineup (148 acts) |
-| `all-timetables.json` | Full performance schedule for the main festival days |
-| `all-stages.json` | Stage reference data (API response snapshot) |
-| `all-festival-dates.json` | Festival date metadata (API response snapshot) |
-| `spot_*.json` | Individual venue/spot details fetched from the official API |
+| File                          | Description                                                                                               |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `all-artists.json`            | Official artist lineup (includes `phonetic_name` property containing translations/Romaji for OCR support) |
+| `all-timetables.json`         | Full performance schedule for the main festival days, including stage and artist relational mappings      |
+| `all-spots.json`              | Unified detailed venue/spot geospatial metadata                                                           |
+| `official-timetable-0411.pdf` | Official timetable image reference for April 11th                                                         |
+| `official-timetable-0412.pdf` | Official timetable image reference for April 12th                                                         |
 
-## Source
+## API Integration & Source
 
-Data was obtained from the official festival mobile-app backend (`synchronicity2026.api.fespli.com`) via standard public API endpoints used by the official iOS application. No private or paywalled endpoints were accessed. No authentication material is stored in this repository.
+This data is passively mirrored from the official festival application backend. The endpoints are open and accessible without authentication or private keys via standard HTTP requests (e.g., `curl` or `fetch`), ensuring reproducibility.
+
+Requests require the `app_version` query parameter for routing (e.g., `?app_version=6.2.2`).
+
+To manually synchronize local JSON payloads with live API values, run the provided utility script in the root directory:
+`pnpm dlx tsx scripts/sync-data.ts`
+
+### Endpoints Reference
+
+- **Artists & Tags:**
+  `GET https://synchronicity2026.api.fespli.com/v1/artists?include_related_artists=true`
+  - Includes photography permissions via nested `tags` arrays.
+- **Timetable References:**
+  `GET https://synchronicity2026.api.fespli.com/v1/timetables`
+  - Returns start/end UNIX timestamps and nested JSON:API standard relationships.
+- **Venue & Spot Coordinates:**
+  `GET https://synchronicity2026.api.fespli.com/v1/spots` & `/v1/spots/<id>`
 
 ## Legal / risk note
 

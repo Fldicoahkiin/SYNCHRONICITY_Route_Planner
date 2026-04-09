@@ -1,0 +1,660 @@
+{
+  "data": [
+    {
+      "id": "1",
+      "type": "spot",
+      "attributes": {
+        "name": "Spotify O-EAST",
+        "priority": 100,
+        "lat": 35.65879761,
+        "lng": 139.6955653,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/u0i7vervbditvj4py0nvnjhz2wr6",
+          "width": 643,
+          "height": 400,
+          "content_type": "image/jpeg"
+        },
+        "area": "Aエリア",
+        "summary": "Google Mapで見る\n\n 🛅コインロッカー\n ・1F ウッドデッキ：サイズ大 6個 / サイズ小 162個\n ・2F ロッカールーム：サイズ大 12個 / サイズ小 504個\n ・3F トイレ前：270個",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/6el0qaygd1s4wff0ec1b9uerjaj1",
+            "width": 643,
+            "height": 400,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://goo.gl/maps/cmmDZBsc3i4EBGZz5\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅コインロッカー</b><br>\n ・1F ウッドデッキ：サイズ大 6個 / サイズ小 162個<br>\n ・2F ロッカールーム：サイズ大 12個 / サイズ小 504個<br>\n ・3F トイレ前：270個\n"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "1",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "3",
+      "type": "spot",
+      "attributes": {
+        "name": "duo MUSIC EXCHANGE",
+        "priority": 99,
+        "lat": 35.65864977,
+        "lng": 139.6955934,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/ipqh8bc6igskcn38tga5bqc4kd1b",
+          "width": 600,
+          "height": 400,
+          "content_type": "image/jpeg"
+        },
+        "area": "Aエリア",
+        "summary": "Google Mapで見る\n\n 🛅クローク\n ・入口デッキ部分にてお預かり可能",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/7i3odrk2l3phnu55j7ux63stpi2n",
+            "width": 600,
+            "height": 400,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://goo.gl/maps/dougC9m4SyrwSeVY6\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅クローク</b><br>\n ・入口デッキ部分にてお預かり可能\n"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "1",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "4",
+      "type": "spot",
+      "attributes": {
+        "name": "Spotify O-WEST",
+        "priority": 98,
+        "lat": 35.6586091,
+        "lng": 139.6953293,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/vmctnlxjgkikyguvysm2ocrx9dfe",
+          "width": 601,
+          "height": 400,
+          "content_type": "image/jpeg"
+        },
+        "area": "Aエリア",
+        "summary": "Google Mapで見る\n\n 🛅コインロッカー\n ・1F：36個\n ・2F：54個",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/4gw3ot4b19e9d97xhjswz9yud5m4",
+            "width": 601,
+            "height": 400,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://goo.gl/maps/HmimLj5c4Xwjkv7d6\" target=\"_blank\">Google Mapで見る</a><br><br>\n <b>🛅コインロッカー</b><br>\n ・1F：36個<br>\n ・2F：54個\n\n"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "1",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "6",
+      "type": "spot",
+      "attributes": {
+        "name": "Spotify O-nest",
+        "priority": 97,
+        "lat": 35.65852251,
+        "lng": 139.695366,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/7ol763wq1bf5m5t6egqi4wgw97o7",
+          "width": 600,
+          "height": 400,
+          "content_type": "image/jpeg"
+        },
+        "area": "Aエリア",
+        "summary": "Google Mapで見る\n\n 🛅コインロッカー\n ・コインロッカー：90個 ",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/y59fnac7qkm7c48j1wl9ldoi0q8z",
+            "width": 600,
+            "height": 400,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://goo.gl/maps/CV9TvGQjpJKieHFP6\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅コインロッカー</b><br>\n ・コインロッカー：90個\n "
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "1",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "22",
+      "type": "spot",
+      "attributes": {
+        "name": "7thFLOOR",
+        "priority": 97,
+        "lat": 35.6586091,
+        "lng": 139.6953293,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/opau9pogxy1f7uw0rzllwgmvx43z",
+          "width": 512,
+          "height": 341,
+          "content_type": "image/jpeg"
+        },
+        "area": "Aエリア",
+        "summary": "Google Mapで見る",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/af8ic9taq4cusialg3bmmyxuwjs1",
+            "width": 512,
+            "height": 341,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://goo.gl/maps/HmimLj5c4Xwjkv7d6\" target=\"_blank\">Google Mapで見る</a><br>\n"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "1",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "5",
+      "type": "spot",
+      "attributes": {
+        "name": "clubasia",
+        "priority": 96,
+        "lat": 35.65894235,
+        "lng": 139.6953567,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/lzem6vumxlb2wo05my362r46ysz1",
+          "width": 600,
+          "height": 400,
+          "content_type": "image/jpeg"
+        },
+        "area": "Aエリア",
+        "summary": "Google Mapで見る\n\n 🛅コインロッカー/クローク\n ・コインロッカー：45個\n ・クローク：50個対応",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/h4q21xi6w2qav6gd0s2tsu0t15bh",
+            "width": 600,
+            "height": 400,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://goo.gl/maps/U1G5xFhQ9ukdTLNY6\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅コインロッカー/クローク</b><br>\n ・コインロッカー：45個<br>\n ・クローク：50個対応"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "1",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "8",
+      "type": "spot",
+      "attributes": {
+        "name": "LOFT9 Shibuya",
+        "priority": 95,
+        "lat": 35.65929888,
+        "lng": 139.695369,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/dryewwoma1f5v47i67gwln1hje4u",
+          "width": 1000,
+          "height": 654,
+          "content_type": "image/png"
+        },
+        "area": "Aエリア",
+        "summary": "Google Mapで見る\n 11:00よりオープンしておりますので、リストバンド交換後のご飲食や休憩でもご利用いただけます。（カフェ営業も行っているキャパシティ150名程度の飲食店です。）",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/vafjplb0550htluobpvn1af9dsfg",
+            "width": 1000,
+            "height": 654,
+            "content_type": "image/png"
+          }
+        ],
+        "description": "<a href=\"https://maps.app.goo.gl/7QANfCv6CZto3CYw6\" target=\"_blank\">Google Mapで見る</a><br>\n 11:00よりオープンしておりますので、リストバンド交換後のご飲食や休憩でもご利用いただけます。（カフェ営業も行っているキャパシティ150名程度の飲食店です。）"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "-9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "1",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "10",
+      "type": "spot",
+      "attributes": {
+        "name": "SHIBUYA CLUB QUATTRO",
+        "priority": 94,
+        "lat": 35.66113162,
+        "lng": 139.6975436,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/0s49wnw6rabqz4kxzwksmja03fos",
+          "width": 1024,
+          "height": 768,
+          "content_type": "image/jpeg"
+        },
+        "area": "Bエリア",
+        "summary": "Google Mapで見る\n\n 🛅ロッカー\n ・コインロッカー：約360個",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/qhdkixrum6ycrxhb3l6gjajgpzfo",
+            "width": 1024,
+            "height": 768,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://maps.app.goo.gl/8BvuxBwxXnYRgSWc6\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅ロッカー</b><br>\n ・コインロッカー：約360個\n"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "2",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "11",
+      "type": "spot",
+      "attributes": {
+        "name": "Veats Shibuya",
+        "priority": 93,
+        "lat": 35.660678,
+        "lng": 139.6976543,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/uvdf9zxw4rcv912mob19g4jj4gzg",
+          "width": 660,
+          "height": 439,
+          "content_type": "image/jpeg"
+        },
+        "area": "Bエリア",
+        "summary": "Google Mapで見る\n\n 🛅ロッカー/クローク\n ・コインロッカー：約300個\n ・クローク：お預かり可能",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/3jvya1viedgs6pfyptpi9pltpius",
+            "width": 660,
+            "height": 439,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://maps.app.goo.gl/iPF5tCs4ictpdyMe6\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅ロッカー/クローク</b><br>\n ・コインロッカー：約300個<br>\n ・クローク：お預かり可能"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "2",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "12",
+      "type": "spot",
+      "attributes": {
+        "name": "WWW",
+        "priority": 92,
+        "lat": 35.66154616,
+        "lng": 139.6987355,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/hcx0ogyggexsm20dvuo56pxal900",
+          "width": 1000,
+          "height": 666,
+          "content_type": "image/jpeg"
+        },
+        "area": "Bエリア",
+        "summary": "Google Mapで見る\n\n 🛅ロッカー\n ・コインロッカー：105個",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/fy8iue2ou41quhic6d9lcwxn4bkv",
+            "width": 1000,
+            "height": 666,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://maps.app.goo.gl/uq5mQ1wy832rkQQdA\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅ロッカー</b><br>\n ・コインロッカー：105個"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "2",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "13",
+      "type": "spot",
+      "attributes": {
+        "name": "WWWX",
+        "priority": 91,
+        "lat": 35.66153461,
+        "lng": 139.698536,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/dlupnyfg58yacsikqeox38bwg0as",
+          "width": 1000,
+          "height": 666,
+          "content_type": "image/jpeg"
+        },
+        "area": "Bエリア",
+        "summary": "Google Mapで見る\n\n 🛅ロッカー\n ・2F：75個 / 4F：135個（2Fは使用できません）",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/rt5l59b97zdqibs3r4a5jxy1x0nz",
+            "width": 1000,
+            "height": 666,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://maps.app.goo.gl/fgPTpmtdHfSZutc3A\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅ロッカー</b><br>\n ・2F：<del>75個</del> / 4F：135個（2Fは使用できません）"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "2",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "20",
+      "type": "spot",
+      "attributes": {
+        "name": "TOKIO TOKYO",
+        "priority": 90,
+        "lat": 35.66256358,
+        "lng": 139.6990026,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/tw3voia646888um46psm4g5m8qcs",
+          "width": 828,
+          "height": 553,
+          "content_type": "image/webp"
+        },
+        "area": "Bエリア",
+        "summary": "Google Mapで見る\n\n 🛅ロッカー\n ・コインロッカー：約20個\n ・クローク：お預かり可能",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/zutezkjrjdcngct649higag06pbr",
+            "width": 828,
+            "height": 553,
+            "content_type": "image/webp"
+          }
+        ],
+        "description": "<a href=\"https://maps.app.goo.gl/WcUAu2bdWsfYq7tZ9\" target=\"_blank\">Google Mapで見る</a><br>\n<br>\n <b>🛅ロッカー</b><br>\n ・コインロッカー：約20個<br>\n ・クローク：お預かり可能"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "2",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "21",
+      "type": "spot",
+      "attributes": {
+        "name": "SHIBUYA FOWS",
+        "priority": 88,
+        "lat": 35.66156503,
+        "lng": 139.6979548,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/9omtke3v7hxltr6c66afd3ph6z6b",
+          "width": 1584,
+          "height": 1034,
+          "content_type": "image/jpeg"
+        },
+        "area": "Bエリア",
+        "summary": "Google Mapで見る",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/dh13orfom2dx5rbeonj3dj2dltr0",
+            "width": 1584,
+            "height": 1034,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://share.google/sKshTs7hh7AUz4jys\" target=\"_blank\">Google Mapで見る</a><br>"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "2",
+            "type": "area"
+          }
+        }
+      }
+    },
+    {
+      "id": "30",
+      "type": "spot",
+      "attributes": {
+        "name": "リストバンド交換所 / 関係者受付",
+        "priority": 86,
+        "lat": 35.65834404,
+        "lng": 139.6953604,
+        "zoom": 17,
+        "color_name": "red",
+        "icon": "wristband",
+        "area": "Z MARUYAMA (旧ATOM TOKYO)",
+        "summary": "Google Mapで見る\n\nリストバンドの引き換えは、当日午前10時より行います。 \n  ※スタート間際のリストバンド交換は非常に混み合います。リストバンドはできる限り早めにお引き換え下さい。\n※ライブ会場ではリストバンド交換はできませんので、ご注意をお願いいたします。\n\nご注意事項※ファストパスの交換もリストバンド交換所にて行います。\n​※超早割、早割のお客さまは優先して引き換え、それ以外のお客さまはお越しいただいた順の引き換えとなります。\n※通し券のリストバンドは2日目もそのまま利用可能です。2日目も外さずご来場下さい。\n※昨年と引き換え場所が異なりますので、ご注意お願いいたします。\n※LOFT9 Shibuyaは会場ではございません。",
+        "description": "<a href=\"https://maps.app.goo.gl/svwHU6QkSszQCTvf9\" target=\"_blank\">Google Mapで見る</a><br>\r\n<br>\r\n<b>リストバンドの引き換えは、当日午前10時より行います。 </b><br>\r\n  <font color=\"#FFCB14\"><b>※スタート間際のリストバンド交換は非常に混み合います。リストバンドはできる限り早めにお引き換え下さい。</b></font><br>\r\n※ライブ会場ではリストバンド交換はできませんので、ご注意をお願いいたします。<br><br>\r\n<b>ご注意事項</b>\r\n※ファストパスの交換もリストバンド交換所にて行います。<br>\r\n​※超早割、早割のお客さまは優先して引き換え、それ以外のお客さまはお越しいただいた順の引き換えとなります。<br>\r\n※通し券のリストバンドは2日目もそのまま利用可能です。2日目も外さずご来場下さい。<br>\r\n※昨年と引き換え場所が異なりますので、ご注意お願いいたします。<br>\r\n※LOFT9 Shibuyaは会場ではございません。<br>"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "2",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {}
+      }
+    },
+    {
+      "id": "18",
+      "type": "spot",
+      "attributes": {
+        "name": "LINE CUBE SHIBUYA",
+        "priority": 85,
+        "lat": 35.66418865,
+        "lng": 139.6986612,
+        "zoom": 17,
+        "color_name": "blue",
+        "icon": "mic",
+        "thumbnail": {
+          "url": "https://storage.fespli.dev/synchronicity2026/rs00rc2dmet9pncw01og9eazj9nx",
+          "width": 1198,
+          "height": 799,
+          "content_type": "image/jpeg"
+        },
+        "area": "Bエリア",
+        "summary": "Google Mapで見る",
+        "images": [
+          {
+            "url": "https://storage.fespli.dev/synchronicity2026/rqijckwbr8e77t38ujo5jsu39xak",
+            "width": 1198,
+            "height": 799,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "description": "<a href=\"https://maps.app.goo.gl/6tTxtTxVnG6qKqfv8\" target=\"_blank\">Google Mapで見る</a><br>"
+      },
+      "relationships": {
+        "category": {
+          "data": {
+            "id": "9",
+            "type": "spot_category"
+          }
+        },
+        "ground_overlay": {},
+        "area": {
+          "data": {
+            "id": "2",
+            "type": "area"
+          }
+        }
+      }
+    }
+  ]
+}
