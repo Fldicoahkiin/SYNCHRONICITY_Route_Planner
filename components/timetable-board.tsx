@@ -139,6 +139,49 @@ export const TimetableBoard = memo(function TimetableBoard({
     return lines;
   }, [timeRange.endMinutes, timeRange.startMinutes]);
 
+  const venueGroups = useMemo(() => {
+    const map = new Map<string, Array<{ set: TimetableSet; groupCount: number; groupIndex: number }>>();
+    for (const venue of visibleVenues) {
+      map.set(venue.id, []);
+    }
+    
+    for (const set of sets) {
+      if (!set.venueId || !map.has(set.venueId)) continue;
+      map.get(set.venueId)!.push({ set, groupCount: 1, groupIndex: 0 });
+    }
+
+    for (const items of map.values()) {
+      if (items.length === 0) continue;
+      
+      items.sort((a, b) => a.set.startAt - b.set.startAt);
+      
+      const columns: typeof items[] = [];
+      for (const item of items) {
+        let placed = false;
+        for (let i = 0; i < columns.length; i++) {
+          const lastInColumn = columns[i][columns[i].length - 1];
+          if (lastInColumn.set.finishAt <= item.set.startAt) {
+            columns[i].push(item);
+            item.groupIndex = i;
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          item.groupIndex = columns.length;
+          columns.push([item]);
+        }
+      }
+      
+      const maxCols = columns.length;
+      for (const item of items) {
+        item.groupCount = maxCols;
+      }
+    }
+    
+    return map;
+  }, [sets, visibleVenues]);
+
   return (
     <div
       className={cn("group relative overflow-x-auto rounded-3xl border border-zinc-800 bg-background", className)}
@@ -217,25 +260,20 @@ export const TimetableBoard = memo(function TimetableBoard({
             );
           })}
 
-          {sets.map((set) => {
-            if (!set.venueId || !venueIndex.has(set.venueId)) {
-              return null;
-            }
+          {Array.from(venueGroups.entries()).flatMap(([venueId, items]) => {
+            const column = venueIndex.get(venueId)!;
+            const venue = venueMap.get(venueId);
+            if (!venue) return null;
 
-            const column = venueIndex.get(set.venueId)!;
-            const venue = venueMap.get(set.venueId);
-            if (!venue) {
-              return null;
-            }
-
-            const startMinutes = getTokyoMinutes(set.startAt);
-            const finishMinutes = getTokyoMinutes(set.finishAt);
-            const top =
-              (startMinutes - timeRange.startMinutes) * MINUTE_HEIGHT + BLOCK_GAP / 2;
-            const height = Math.max(
-              40,
-              (finishMinutes - startMinutes) * MINUTE_HEIGHT - BLOCK_GAP,
-            );
+            return items.map(({ set, groupCount, groupIndex }) => {
+              const startMinutes = getTokyoMinutes(set.startAt);
+              const finishMinutes = getTokyoMinutes(set.finishAt);
+              const top =
+                (startMinutes - timeRange.startMinutes) * MINUTE_HEIGHT + BLOCK_GAP / 2;
+              const height = Math.max(
+                40,
+                (finishMinutes - startMinutes) * MINUTE_HEIGHT - BLOCK_GAP,
+              );
             const isSelected = selectedIds?.has(set.id) ?? false;
             const order = routeOrder?.get(set.id);
 
@@ -258,9 +296,9 @@ export const TimetableBoard = memo(function TimetableBoard({
                     : "opacity-85 hover:opacity-100",
                 )}
                 style={{
-                  left: TIME_COLUMN_WIDTH + column * COLUMN_WIDTH + BLOCK_GAP,
+                  left: TIME_COLUMN_WIDTH + column * COLUMN_WIDTH + BLOCK_GAP + ((COLUMN_WIDTH - BLOCK_GAP * 2) / groupCount) * groupIndex,
                   top,
-                  width: COLUMN_WIDTH - BLOCK_GAP * 2,
+                  width: (COLUMN_WIDTH - BLOCK_GAP * 2) / groupCount,
                   height,
                   background: isSelected
                     ? `linear-gradient(180deg, ${hexToRgba(
@@ -295,7 +333,7 @@ export const TimetableBoard = memo(function TimetableBoard({
                 </div>
               </button>
             );
-          })}
+          })})}
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/client";
-import { CalendarDays, Map, Route, ChevronRight } from "lucide-react";
+import { CalendarDays, Route, ChevronRight } from "lucide-react";
 import { venues } from "@/lib/data/venues";
 import { timetable } from "@/lib/data/timetable";
 import { useLocalePath } from "@/lib/hooks/use-locale-path";
@@ -38,14 +38,6 @@ export default function Home() {
         "border-emerald-500/25 bg-emerald-500/[0.09] text-emerald-300 group-hover:border-emerald-400/50 group-hover:bg-emerald-500/[0.12]",
       iconClass: "bg-emerald-400/10 text-emerald-300 ring-emerald-400/20",
     },
-    {
-      href: href("map"),
-      label: t("home.cards.map"),
-      icon: Map,
-      accentClass:
-        "border-violet-500/25 bg-violet-500/[0.09] text-violet-300 group-hover:border-violet-400/50 group-hover:bg-violet-500/[0.12]",
-      iconClass: "bg-violet-400/10 text-violet-300 ring-violet-400/20",
-    },
   ];
 
   return (
@@ -74,8 +66,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex justify-center">
-          <div className="grid w-full gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="flex justify-center flex-1">
+          <div className="grid w-full gap-4 sm:gap-5 md:grid-cols-2 max-w-4xl">
             {cards.map((card) => {
               const Icon = card.icon;
               return (
