@@ -25,9 +25,13 @@ export function buildGoogleMapsRouteUrl(stops: MapStop[]): string {
     return "https://www.google.com/maps";
   }
 
-  const origin = encodeStop(stops[0]);
-  const destination = encodeStop(stops[stops.length - 1]);
-  const waypoints = stops
+  // Google Maps URL scheme supports a maximum of 9 waypoints plus origin and destination.
+  // If we have more, we must trim them to avoid 400 Bad Request.
+  const routeStops = stops.length > 11 ? [stops[0], ...stops.slice(1, 10), stops[stops.length - 1]] : stops;
+
+  const origin = encodeStop(routeStops[0]);
+  const destination = encodeStop(routeStops[routeStops.length - 1]);
+  const waypoints = routeStops
     .slice(1, -1)
     .map(encodeStop)
     .join("|");
@@ -52,29 +56,17 @@ export function buildAppleMapsUrl(
   toLat: number,
   toLng: number,
 ): string {
-  return buildAppleMapsRouteUrl([
-    { lat: fromLat, lng: fromLng },
-    { lat: toLat, lng: toLng },
-  ]);
+  return `https://maps.apple.com/?saddr=${fromLat},${fromLng}&daddr=${toLat},${toLng}&dirflg=w`;
 }
 
 export function buildAppleMapsRouteUrl(stops: MapStop[]): string {
-  if (stops.length === 0) {
+  if (stops.length < 2) {
     return "https://maps.apple.com";
   }
-
-  const query = new URLSearchParams({
-    destination: encodeStop(stops[stops.length - 1]),
-    mode: "walking",
-  });
-
-  if (stops.length > 1) {
-    query.set("source", encodeStop(stops[0]));
-  }
-
-  for (const waypoint of stops.slice(1, -1)) {
-    query.append("waypoint", encodeStop(waypoint));
-  }
-
-  return `https://maps.apple.com/directions?${query.toString()}`;
+  // Apple Maps URL scheme does NOT support multi-stop waypoints.
+  // We can only provide the start and the ultimate destination.
+  const origin = encodeStop(stops[0]);
+  const destination = encodeStop(stops[stops.length - 1]);
+  
+  return `https://maps.apple.com/?saddr=${origin}&daddr=${destination}&dirflg=w`;
 }

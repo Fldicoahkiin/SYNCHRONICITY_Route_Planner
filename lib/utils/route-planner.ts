@@ -86,7 +86,7 @@ export function planRoute(
     .filter((set) => set.day === day)
     .sort(compareSets);
 
-  const rawConflictGroups = detectConflictGroups(sets);
+  const rawConflictGroups = detectConflictGroups(sets, travelOverrides);
   const groupIdByPerformance = new Map<string, string>();
 
   for (const group of rawConflictGroups) {
@@ -143,24 +143,39 @@ export function planRoute(
   };
 }
 
-export function detectConflictGroups(sets: TimetableSet[]): ConflictGroup[] {
+export function detectConflictGroups(
+  sets: TimetableSet[],
+  travelOverrides: Record<string, RouteTravelOverride>
+): ConflictGroup[] {
   const sortedSets = [...sets].sort(compareSets);
   const conflicts: ConflictGroup[] = [];
 
   for (let index = 0; index < sortedSets.length; ) {
     const current = sortedSets[index];
     const groupPerformances = [current];
-    let groupFinishAt = current.finishAt;
     let nextIndex = index + 1;
 
-    while (
-      nextIndex < sortedSets.length &&
-      sortedSets[nextIndex].startAt < groupFinishAt
-    ) {
+    while (nextIndex < sortedSets.length) {
       const next = sortedSets[nextIndex];
-      groupPerformances.push(next);
-      groupFinishAt = Math.max(groupFinishAt, next.finishAt);
-      nextIndex += 1;
+      // A set is in the same conflict group if it physically or temporally conflicts
+      // with ANY set already in this group.
+      const hasConflict = groupPerformances.some((p) => {
+        // Strict time overlap
+        if (next.startAt < p.finishAt) {
+          return true; // Overlap in schedule
+        }
+        // Transit overlap (if p finishes before next starts or exactly at the same time)
+        const transfer = resolveTransfer(p, next, travelOverrides);
+        // If missing more than 5 minutes of the next set, it's a conflict
+        return transfer.bufferMinutes < -5;
+      });
+
+      if (hasConflict) {
+        groupPerformances.push(next);
+        nextIndex += 1;
+      } else {
+        break; // If chronologically next item doesn't conflict with any so far, the component ends.
+      }
     }
 
     if (groupPerformances.length > 1) {
@@ -235,7 +250,6 @@ function summarizeRoute(
       comfortableLegs += 1;
     }
 
-    // Include negative buffers so the average reflects impossible/tight transitions as well
     totalBuffer += transfer.bufferMinutes;
 
     legs.push({

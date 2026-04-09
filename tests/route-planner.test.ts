@@ -31,7 +31,7 @@ describe("route planner", () => {
       buildSet("c", "v3", 200 * 60, 260 * 60),
     ];
 
-    const groups = detectConflictGroups(sets);
+    const groups = detectConflictGroups(sets, {});
 
     expect(groups).toHaveLength(1);
     expect(groups[0]?.performanceIds).toEqual(["a", "b"]);
@@ -51,6 +51,34 @@ describe("route planner", () => {
       "optA",
       "optB",
     ]);
+  });
+
+  it("groups sets that don't overlap but have impossible transit time", () => {
+    // A ends at +60min, B starts at +65min → 5 min gap
+    // But v1→v3 walk is not in matrix, falls back to 12min (o-east→quattro default)
+    // buffer = 5 - 12 = -7 < -5, so they should be grouped
+    const sets = [
+      buildSet("x", "o-east", 0, 60 * 60),
+      buildSet("y", "quattro", 65 * 60, 120 * 60),
+    ];
+
+    const groups = detectConflictGroups(sets, {});
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.performanceIds).toEqual(["x", "y"]);
+  });
+
+  it("does NOT group sets with sufficient transit buffer", () => {
+    // A ends at +60min, B starts at +80min → 20 min gap
+    // Walk is 12min → buffer = 20 - 12 = 8, which is > -5, no conflict
+    const sets = [
+      buildSet("x", "o-east", 0, 60 * 60),
+      buildSet("y", "quattro", 80 * 60, 140 * 60),
+    ];
+
+    const groups = detectConflictGroups(sets, {});
+
+    expect(groups).toHaveLength(0);
   });
 
   it("includes negative buffers in the average buffer summary", () => {
