@@ -2,6 +2,28 @@ const ja = {
   meta: {
     title: "SYNCHRONICITY'26 Route Planner",
     description: "タイムテーブル、会場マップ、保存したルートをまとめて確認。",
+    pages: {
+      home: {
+        title: "SYNCHRONICITY'26 Route Planner",
+        description: "トップからタイムテーブル、ルート、地図へそのまま入れます。",
+      },
+      browse: {
+        title: "全体を見る | SYNCHRONICITY'26",
+        description: "日ごとのタイムテーブル、地図、ルート候補をまとめて確認できます。",
+      },
+      plan: {
+        title: "マイプラン | SYNCHRONICITY'26",
+        description: "分岐ルート、徒歩時間、書き出し用の内容をまとめて確認できます。",
+      },
+      map: {
+        title: "会場マップ | SYNCHRONICITY'26",
+        description: "会場位置と現在のルートを地図で確認できます。",
+      },
+      timetable: {
+        title: "タイムテーブル | SYNCHRONICITY'26",
+        description: "時間と会場ごとに全公演を見ながら、観たい公演を保存できます。",
+      },
+    },
   },
   nav: {
     home: "ホーム",

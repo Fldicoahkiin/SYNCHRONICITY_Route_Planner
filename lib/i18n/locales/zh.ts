@@ -2,6 +2,28 @@ const zh = {
   meta: {
     title: "SYNCHRONICITY'26 行程规划",
     description: "查看时间表、场地地图和你保存的路线。",
+    pages: {
+      home: {
+        title: "SYNCHRONICITY'26 行程规划",
+        description: "从首页进入时间表、路线和地图。",
+      },
+      browse: {
+        title: "浏览全景 | SYNCHRONICITY'26",
+        description: "按日期查看时间表、地图和路线建议。",
+      },
+      plan: {
+        title: "我的行程 | SYNCHRONICITY'26",
+        description: "查看冲突分支、步行时间，并导出当前路线。",
+      },
+      map: {
+        title: "场地地图 | SYNCHRONICITY'26",
+        description: "在地图上查看场地位置和你当前选中的路线。",
+      },
+      timetable: {
+        title: "时间表 | SYNCHRONICITY'26",
+        description: "按场地和时间浏览全部演出，并直接收藏想看的场次。",
+      },
+    },
   },
   nav: {
     home: "首页",

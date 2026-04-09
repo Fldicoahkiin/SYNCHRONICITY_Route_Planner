@@ -2,6 +2,28 @@ const en = {
   meta: {
     title: "SYNCHRONICITY'26 Route Planner",
     description: "Check the timetable, venue map, and your saved route in one place.",
+    pages: {
+      home: {
+        title: "SYNCHRONICITY'26 Route Planner",
+        description: "Jump into the timetable, route plan, and venue map from one home screen.",
+      },
+      browse: {
+        title: "Browse Overview | SYNCHRONICITY'26",
+        description: "See the timetable, map, and route suggestions together for each day.",
+      },
+      plan: {
+        title: "My Plan | SYNCHRONICITY'26",
+        description: "Review route branches, walking times, and exports for your saved sets.",
+      },
+      map: {
+        title: "Venue Map | SYNCHRONICITY'26",
+        description: "Follow venue locations and your current route on the map.",
+      },
+      timetable: {
+        title: "Timetable | SYNCHRONICITY'26",
+        description: "Browse every set by time and venue, then save the ones you want to catch.",
+      },
+    },
   },
   nav: {
     home: "Home",
