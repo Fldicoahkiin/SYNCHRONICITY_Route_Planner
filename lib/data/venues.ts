@@ -113,7 +113,7 @@ export const venues: Venue[] = [
   {
     id: "wwwx",
     spotId: "13",
-    name: "WWWX",
+    name: "WWW X",
     lat: 35.66153461,
     lng: 139.698536,
     area: "B",

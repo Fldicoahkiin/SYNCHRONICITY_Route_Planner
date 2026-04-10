@@ -86,8 +86,9 @@ export function getRouteExportStops(legs: RouteLeg[]): Array<{
   lng: number;
   label: string;
   venueName: string;
+  venueId: string;
 }> {
-  const stops: Array<{ lat: number; lng: number; label: string; venueName: string }> = [];
+  const stops: Array<{ lat: number; lng: number; label: string; venueName: string; venueId: string }> = [];
 
   for (const leg of legs) {
     const venue = leg.set.venueId ? venueMap.get(leg.set.venueId) : null;
@@ -108,6 +109,7 @@ export function getRouteExportStops(legs: RouteLeg[]): Array<{
         lng: venue.lng,
         label: `${venue.name}: ${annotation}`,
         venueName: venue.name,
+        venueId: venue.id,
       });
     }
   }

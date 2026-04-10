@@ -23,11 +23,46 @@ export function buildGoogleMapsUrl(
 interface MapStopWithLabel extends MapStop {
   label?: string;
   venueName?: string;
+  venueId?: string;
 }
 
-function encodeStopForRouting(stop: MapStopWithLabel): string {
+function encodeStopForGoogleRouting(stop: MapStopWithLabel): string {
   if (stop.venueName) {
-    return `${stop.venueName}, Shibuya, Tokyo`;
+    // Strip parenthetical alternative names for better generic POI resolution
+    const cleanName = stop.venueName.replace(/\s*\(.*?\)\s*/g, '');
+    return `${cleanName}, Shibuya, Tokyo`;
+  }
+  return encodeStop(stop);
+}
+
+function encodeStopForAppleRouting(stop: MapStopWithLabel): string {
+  if (stop.venueId) {
+    // Use proven searchable names or fallback to exact coordinates for Apple Maps 
+    // because Apple Maps text search is significantly less adaptable than Google Maps.
+    const appleSafeNames: Record<string, string> = {
+      "o-east": "Spotify O-EAST, Shibuya, Tokyo",
+      "o-west": "Spotify O-WEST, Shibuya, Tokyo",
+      "clubasia": "clubasia, Shibuya, Tokyo",
+      "duo": "duo MUSIC EXCHANGE, Shibuya, Tokyo",
+      "o-nest": "Spotify O-nest, Shibuya, Tokyo",
+      // Apple maps might misread these or they are too obscure: map to coordinates directly
+      "www": encodeStop(stop), // WWW and WWW X share the same building but maps confuse them
+      "wwwx": encodeStop(stop),
+      "tokio-tokyo": encodeStop(stop),
+      "fows": encodeStop(stop),
+      "7thfloor": encodeStop(stop),
+      "linecube": "LINE CUBE SHIBUYA, Shibuya, Tokyo",
+    };
+    
+    // For nested venues (e.g., 2nd stages), use coordinates because 
+    // Apple Maps will fail to find sub-venues accurately via string search.
+    if (stop.venueId.includes("2nd") || stop.venueId.includes("3f") || stop.venueId.includes("lobby")) {
+      return encodeStop(stop);
+    }
+    
+    if (appleSafeNames[stop.venueId]) {
+      return appleSafeNames[stop.venueId];
+    }
   }
   return encodeStop(stop);
 }
@@ -40,11 +75,11 @@ export function buildGoogleMapsRouteUrl(stops: MapStopWithLabel[]): string {
   // Google Maps URL scheme supports a maximum of 9 waypoints plus origin and destination.
   const routeStops = stops.length > 11 ? [stops[0], ...stops.slice(1, 10), stops[stops.length - 1]] : stops;
 
-  const origin = encodeStopForRouting(routeStops[0]);
-  const destination = encodeStopForRouting(routeStops[routeStops.length - 1]);
+  const origin = encodeStopForGoogleRouting(routeStops[0]);
+  const destination = encodeStopForGoogleRouting(routeStops[routeStops.length - 1]);
   const waypoints = routeStops
     .slice(1, -1)
-    .map(encodeStopForRouting)
+    .map(encodeStopForGoogleRouting)
     .map(encodeURIComponent)
     .join("|");
 
@@ -80,8 +115,8 @@ export function buildAppleMapsRouteUrl(stops: MapStopWithLabel[]): string {
   }
   // Apple Maps URL scheme does NOT support multi-stop waypoints well via saddr/daddr.
   // We can only provide the start and the ultimate destination.
-  const origin = encodeURIComponent(encodeStopForRouting(stops[0]));
-  const destination = encodeURIComponent(encodeStopForRouting(stops[stops.length - 1]));
+  const origin = encodeURIComponent(encodeStopForAppleRouting(stops[0]));
+  const destination = encodeURIComponent(encodeStopForAppleRouting(stops[stops.length - 1]));
   
   return `https://maps.apple.com/?saddr=${origin}&daddr=${destination}&dirflg=w`;
 }
