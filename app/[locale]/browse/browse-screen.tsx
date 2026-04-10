@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -180,6 +180,11 @@ export default function BrowsePage({
 
   const dayNum = day === "1" ? 1 : 2;
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const daySets = useMemo(
     () => timetableSets.filter((set) => set.day === dayNum),
     [timetableSets, dayNum],
@@ -257,7 +262,7 @@ export default function BrowsePage({
                     setShowFavoritesOnly(false);
                   }
                 }}
-                disabled={favoriteIds.size === 0}
+                disabled={!mounted || favoriteIds.size === 0}
                 className="flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/40 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-all hover:text-zinc-200 disabled:opacity-50"
                 title={t("timetable.clearFavorites")}
               >
