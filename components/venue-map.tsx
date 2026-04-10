@@ -313,14 +313,13 @@ export default function VenueMap({
         />
       ))}
 
-      {routeSegments.map((segment) => segment && (
+      {routeSegments.map((segment) => segment && segment.minutes > 0 && (
         <Marker
           key={`walk-${segment.key}`}
           position={segment.midPoint}
           icon={createWalkLabelIcon(segment.minutes, t("map.minutesUnit"))}
-          opacity={1}
           interactive={false}
-          zIndexOffset={500}
+          zIndexOffset={800}
         />
       ))}
 
