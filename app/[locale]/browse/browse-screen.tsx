@@ -182,6 +182,7 @@ export default function BrowsePage({
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -296,6 +297,7 @@ export default function BrowsePage({
               frameSets={daySets}
               selectedIds={favoriteIds}
               compactLayout={showFavoritesOnly && query === ""}
+              onlyActiveVenues={showFavoritesOnly || !!resolvedVenueId}
               onToggleFavorite={toggleFavorite}
             />
           )}

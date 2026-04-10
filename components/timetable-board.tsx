@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, memo } from "react";
+import { useMemo, memo, useState } from "react";
 import { venues, venueMap } from "@/lib/data/venues";
 import type { TimetableSet } from "@/lib/data/timetable";
 import { formatTime } from "@/lib/utils/route-planner";
 import { cn } from "@/lib/utils";
+import { ZoomIn, ZoomOut } from "lucide-react";
 
 const HEADER_HEIGHT = 54;
 const TIME_COLUMN_WIDTH = 64;
-const COLUMN_WIDTH = 280;
-const MINUTE_HEIGHT = 4.0;
+const BASE_COLUMN_WIDTH = 280;
+const BASE_MINUTE_HEIGHT = 4.0;
 const BLOCK_GAP = 6;
 
 const shortVenueLabel: Record<string, string> = {
@@ -92,6 +93,10 @@ export const TimetableBoard = memo(function TimetableBoard({
   onToggleFavorite,
   className,
 }: TimetableBoardProps) {
+  const [zoom, setZoom] = useState(1);
+  const COLUMN_WIDTH = BASE_COLUMN_WIDTH * zoom;
+  const MINUTE_HEIGHT = BASE_MINUTE_HEIGHT * zoom;
+
   const framingSets = frameSets && frameSets.length > 0 ? frameSets : sets;
 
   const visibleVenues = useMemo(() => {
@@ -131,7 +136,7 @@ export const TimetableBoard = memo(function TimetableBoard({
       endMinutes,
       height: Math.max(480, (endMinutes - startMinutes) * MINUTE_HEIGHT),
     };
-  }, [framingSets]);
+  }, [framingSets, MINUTE_HEIGHT]);
 
   const hourLines = useMemo(() => {
     const lines: number[] = [];
@@ -215,9 +220,25 @@ export const TimetableBoard = memo(function TimetableBoard({
 
   return (
     <div
-      className={cn("group relative overflow-x-auto rounded-3xl border border-zinc-800 bg-background", className)}
-      style={{ overflowY: "clip" }}
+      className={cn("group relative overflow-auto rounded-3xl border border-zinc-800 bg-background", className)}
     >
+      {/* Zoom Controls */}
+      <div className="sticky left-0 right-0 top-0 h-0 w-full z-50">
+        <div className="absolute right-4 top-4 flex flex-col gap-[1px] overflow-hidden rounded-xl border border-zinc-700 bg-zinc-800 shadow-xl backdrop-blur-md">
+          <button
+            onClick={() => setZoom((z) => Math.min(2.5, z + 0.25))}
+            className="flex h-9 w-9 items-center justify-center bg-zinc-900/90 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+          >
+            <ZoomIn className="h-[18px] w-[18px]" />
+          </button>
+          <button
+            onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
+            className="flex h-9 w-9 items-center justify-center bg-zinc-900/90 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+          >
+            <ZoomOut className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+      </div>
       {/* Horizontal scroll indicator gradient - left */}
       <div className="pointer-events-none sticky left-0 top-0 z-40 h-full w-0.5 bg-gradient-to-b from-cyan-500/60 via-cyan-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
