@@ -553,7 +553,7 @@ export function ImportFromImageButton({
       <Dialog open={state.open} onOpenChange={handleOpenChange}>
         <DialogContent
           showCloseButton={false}
-          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[92vh] w-full max-w-none flex-col translate-x-0 translate-y-0 p-0 rounded-b-none rounded-t-2xl border border-zinc-800 bg-background shadow-2xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-w-md sm:max-h-[85vh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl overflow-hidden"
+          className="fixed inset-0 z-50 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col rounded-none border-0 bg-background p-0 sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[85vh] sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border sm:border-zinc-800 sm:shadow-2xl sm:overflow-hidden"
         >
           <DialogTitle className="sr-only">
             {t("timetable.import.title")}
