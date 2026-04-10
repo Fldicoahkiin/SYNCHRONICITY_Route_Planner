@@ -10,7 +10,7 @@ import {
   type ConflictTransferPreview,
 } from "@/lib/utils/route-planner";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Clock, MapPin, Navigation, ArrowRight } from "lucide-react";
+import { Navigation, Clock, MapPin, AlertOctagon, AlertTriangle, ArrowRight } from "lucide-react";
 
 interface ConflictGroupSelectorProps {
   groups: ConflictGroup[];
@@ -95,21 +95,30 @@ function ConflictNode({
     };
   }, [group.performances]);
 
+  const selectedCount = group.selectedPerformanceIds?.length ?? 0;
+  const isHardConflict = selectedCount > 1;
+
   return (
-    <div className="relative pl-8">
-      {/* Timeline dot */}
-      <div className="absolute left-0 top-1.5 h-6 w-6 rounded-full border-2 border-amber-500/40 bg-zinc-950" />
+    <div className="relative mb-6 ml-3 rounded-2xl border border-rose-900/30 bg-rose-950/10 p-4 pt-5">
+      <div className="absolute -left-[5px] top-4 h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
 
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-amber-300">
-            <Clock className="h-3.5 w-3.5" />
-            {formatTime(timeRange.startAt)} - {formatTime(timeRange.finishAt)}
-          </div>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            {t("plan.conflict.warningDetail")}
+        <div className="flex-1">
+          <h3 className="text-sm font-bold text-rose-200">
+            {t("plan.conflict.title")}
+          </h3>
+          <p className="mt-1 text-xs text-rose-300/80">
+            {t("plan.conflict.description")}
           </p>
+          {isHardConflict && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-rose-500/10 border border-rose-500/20 px-3 py-2 text-rose-300">
+              <AlertOctagon className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="text-xs font-semibold leading-relaxed">
+                你同时保留了多个时间产生冲突的演出！你可能需要舍弃其中部分来保证合理规划。
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button

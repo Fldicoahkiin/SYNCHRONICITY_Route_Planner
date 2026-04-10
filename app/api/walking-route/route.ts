@@ -1,5 +1,6 @@
 import { venueMap } from "@/lib/data/venues";
 import { NextRequest, NextResponse } from "next/server";
+import routesCacheData from "@/lib/data/routes-cache.json";
 
 const ORS_BASE_URL = "https://api.openrouteservice.org/v2/directions/foot-walking";
 const ROUTING_TIMEOUT_MS = 8000;
@@ -77,6 +78,16 @@ export async function POST(request: NextRequest) {
         { error: "Missing venue coordinates" },
         { status: 400 },
       );
+    }
+
+    const pairKey = `${fromVenueId}->${toVenueId}`;
+    const cached = (routesCacheData as any)[pairKey];
+    if (cached && cached.geometry && cached.geometry.length > 0) {
+      return NextResponse.json({
+        minutes: cached.minutes,
+        distanceMeters: cached.distanceMeters,
+        geometry: cached.geometry,
+      });
     }
 
     if (!apiKey) {
