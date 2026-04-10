@@ -5,7 +5,7 @@ import { useTranslation } from "@/lib/i18n/client";
 import { verifiedVenueMap } from "@/lib/data/venues-verified";
 import { formatTime, type RouteLeg } from "@/lib/utils/route-planner";
 import { cn } from "@/lib/utils";
-import { Navigation, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Navigation, Clock, AlertCircle, CheckCircle2, Coffee, Map } from "lucide-react";
 
 interface BufferTimelineProps {
   legs: RouteLeg[];
@@ -29,12 +29,20 @@ export function BufferTimeline({ legs, className }: BufferTimelineProps) {
       const duration = Math.round((leg.set.finishAt - leg.set.startAt) / 60);
       const isLast = idx === legs.length - 1;
 
+      const isAreaTransfer =
+        venue &&
+        nextVenue &&
+        venue.area !== nextVenue.area &&
+        venue.area !== "other" &&
+        nextVenue.area !== "other";
+
       return {
         leg,
         venue,
         nextVenue,
         duration,
         isLast,
+        isAreaTransfer,
         isSelected: true,
       };
     });
@@ -180,20 +188,35 @@ export function BufferTimeline({ legs, className }: BufferTimelineProps) {
               >
                 <div className="space-y-2">
                   {/* Walking Time */}
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-1.5 text-zinc-300">
-                      <Navigation className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
-                      <span className="font-semibold">{t("plan.leg.walk")}</span>
+                  {item.venue && item.nextVenue && item.venue.id === item.nextVenue.id ? (
+                    <div className="flex items-center gap-2 text-xs text-zinc-400">
+                      <Coffee className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />
+                      <span className="font-semibold">{t("plan.leg.stayAtVenue")}</span>
                     </div>
-                    <div>
-                      <span className="font-bold text-amber-400">
-                        {item.leg.walkMinutes}m
-                      </span>
-                      <span className="text-zinc-500 ml-1">
-                        → {item.nextVenue?.name}
-                      </span>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-1.5 text-zinc-300">
+                          <Navigation className={cn("h-3.5 w-3.5 flex-shrink-0", item.isAreaTransfer ? "text-cyan-400" : "text-amber-400")} />
+                          <span className={cn("font-semibold", item.isAreaTransfer && "text-cyan-300")}>{t("plan.leg.walk")}</span>
+                        </div>
+                        <div>
+                          <span className={cn("font-bold", item.isAreaTransfer ? "text-cyan-400" : "text-amber-400")}>
+                            {item.leg.walkMinutes}m
+                          </span>
+                          <span className="text-zinc-500 ml-1">
+                            → {item.nextVenue?.name}
+                          </span>
+                        </div>
+                      </div>
+                      {item.isAreaTransfer && item.venue && item.nextVenue && (
+                        <div className="flex w-fit items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-bold text-cyan-300">
+                          <Map className="h-3 w-3" />
+                          跨区移动 (Area {item.venue.area} ➔ Area {item.nextVenue.area})
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   {/* Gap Time */}
                   <div className="flex items-center justify-between gap-2 text-xs">

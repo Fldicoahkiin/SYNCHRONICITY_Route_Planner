@@ -6,7 +6,7 @@ import { formatTime } from "@/lib/utils/route-planner";
 import { useTranslation } from "@/lib/i18n/client";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Navigation, Map } from "lucide-react";
+import { Navigation, Map, Coffee } from "lucide-react";
 
 export function RouteLegList({
   route,
@@ -35,6 +35,8 @@ export function RouteLegList({
           venue.area !== nextVenue.area &&
           venue.area !== "other" &&
           nextVenue.area !== "other";
+
+        const isSameVenue = venue && nextVenue && venue.id === nextVenue.id;
 
         return (
           <div key={leg.set.id} className="relative pl-5 before:absolute before:-left-[9px] before:top-2 before:h-4 before:w-4 before:rounded-full before:border-[3px] before:border-zinc-950 before:bg-zinc-700">
@@ -76,10 +78,19 @@ export function RouteLegList({
               <div className="mt-4 mb-2 ml-4">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
-                    <Navigation className={cn("h-3.5 w-3.5", isAreaTransfer && "text-cyan-400")} />
-                    <span className={cn(isAreaTransfer && "font-bold text-cyan-300")}>
-                      {t("plan.leg.walk", { minutes: leg.walkMinutes })}
-                    </span>
+                    {isSameVenue ? (
+                      <>
+                        <Coffee className="h-3.5 w-3.5" />
+                        <span>{t("plan.leg.stayAtVenue")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Navigation className={cn("h-3.5 w-3.5", isAreaTransfer && "text-cyan-400")} />
+                        <span className={cn(isAreaTransfer && "font-bold text-cyan-300")}>
+                          {t("plan.leg.walk", { minutes: leg.walkMinutes })}
+                        </span>
+                      </>
+                    )}
                   </div>
                   {isAreaTransfer && (
                     <div className="flex w-fit items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-bold text-cyan-300">

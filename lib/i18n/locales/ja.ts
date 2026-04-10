@@ -143,6 +143,7 @@ const ja = {
       performanceTime: "演出時間",
       performance: "演出",
       walk: "徒歩約 {{minutes}} 分",
+      stayAtVenue: "同じ会場",
       walkingTime: "徒歩時間",
       gap: "間隔 {{minutes}} 分",
       buffer: "余裕 {{minutes}} 分",

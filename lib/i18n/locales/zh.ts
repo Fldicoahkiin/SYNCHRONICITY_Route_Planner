@@ -143,6 +143,7 @@ const zh = {
       performanceTime: "表演时间",
       performance: "表演",
       walk: "步行约 {{minutes}} 分钟",
+      stayAtVenue: "留在原场馆",
       walkingTime: "步行时间",
       gap: "总间隔 {{minutes}} 分钟",
       buffer: "余量 {{minutes}} 分钟",

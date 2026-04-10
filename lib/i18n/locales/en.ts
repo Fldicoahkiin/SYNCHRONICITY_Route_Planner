@@ -143,6 +143,7 @@ const en = {
       performanceTime: "Performance time",
       performance: "PERFORMANCE",
       walk: "~{{minutes}} min walk",
+      stayAtVenue: "Stay at venue",
       walkingTime: "Walking time",
       gap: "{{minutes}} min gap",
       buffer: "{{minutes}} min buffer",
