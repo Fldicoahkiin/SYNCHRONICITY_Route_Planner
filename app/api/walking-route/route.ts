@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const pairKey = `${fromVenueId}->${toVenueId}`;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cached = (routesCacheData as any)[pairKey];
     if (cached && cached.geometry && cached.geometry.length > 0) {
       return NextResponse.json({

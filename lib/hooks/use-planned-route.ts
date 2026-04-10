@@ -1,46 +1,22 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import type { TimetableSet } from "@/lib/data/timetable";
-import { useConflictSelection } from "@/lib/hooks/use-conflict-selection";
 import { useRouteDirections } from "@/lib/hooks/use-route-directions";
 import { planRoute } from "@/lib/utils/route-planner";
 
 export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
-  const {
-    groupSelections,
-    selectedCount,
-    toggleOption,
-    setGroupSelection,
-    selectAllInGroup,
-    clearGroup,
-    syncWithRoute,
-    resetDay,
-    isHydrated,
-  } = useConflictSelection(day);
-
   const baseRoute = useMemo(
     () =>
       planRoute(
         favorites,
         day,
         {},
-        groupSelections,
+        // Pass empty object for groupSelections, conflict groups will be generated but not auto-filtered
+        {},
       ),
-    [favorites, day, groupSelections],
+    [favorites, day],
   );
-
-  useEffect(() => {
-    if (!isHydrated) {
-      return;
-    }
-
-    syncWithRoute(baseRoute.conflictGroups);
-  }, [
-    baseRoute.conflictGroups,
-    isHydrated,
-    syncWithRoute,
-  ]);
 
   const { overrides, isLoading, hasRouteApiError } = useRouteDirections(baseRoute);
 
@@ -54,30 +30,14 @@ export function usePlannedRoute(favorites: TimetableSet[], day: 1 | 2) {
       favorites,
       day,
       overrides,
-      groupSelections,
+      {},
     );
-  }, [baseRoute, favorites, day, hasOverrides, overrides, groupSelections]);
-
-  useEffect(() => {
-    if (!isHydrated) {
-      return;
-    }
-
-    syncWithRoute(route.conflictGroups);
-  }, [route.conflictGroups, isHydrated, syncWithRoute]);
+  }, [baseRoute, favorites, day, hasOverrides, overrides]);
 
   return {
     route,
     isLoadingDirections: isLoading,
     hasRouteApiError,
-    groupSelections,
-    selectedCount,
-    toggleOption,
-    setGroupSelection,
-    selectAllInGroup,
-    clearGroup,
-    syncWithRoute,
-    resetDay,
-    isHydrated,
+    isHydrated: typeof window !== "undefined",
   };
 }

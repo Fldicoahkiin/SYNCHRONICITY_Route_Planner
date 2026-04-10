@@ -20,7 +20,7 @@ import { DaySwitcher } from "@/components/day-switcher";
 import type { Locale } from "@/lib/i18n/settings";
 import type { TimetableSet } from "@/lib/data/timetable";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Download, ExternalLink } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 
 const VenueMap = dynamic(() => import("@/components/venue-map"), {
   ssr: false,
@@ -41,7 +41,7 @@ export default function PlanPage({
   const [day, setDay] = useDay();
   const [isExportingPng, setIsExportingPng] = useState(false);
   const exportSheetRef = useRef<HTMLDivElement>(null);
-  const { favorites, setFavorites } = useFavorites();
+  const { favorites, setFavorites, toggleFavorite } = useFavorites();
 
   const favoriteSets = useMemo(
     () => timetableSets.filter((set) => favorites[set.id]),
@@ -51,26 +51,9 @@ export default function PlanPage({
   const dayNum = day === "1" ? 1 : 2;
   const {
     route,
-    toggleOption,
-    selectAllInGroup,
-    clearGroup,
     isLoadingDirections,
   } = usePlannedRoute(favoriteSets, dayNum);
 
-  const handleSyncToFavorites = () => {
-    if (!window.confirm(t("plan.syncFavoritesConfirm") ?? "This will replace your favorites for this day with the current route. Continue?")) {
-      return;
-    }
-    const selectedIds = new Set(route.legs.map(leg => leg.set.id));
-    const daySets = timetableSets.filter(set => set.day === dayNum);
-
-    setFavorites(prev => {
-      const next = { ...prev };
-      daySets.forEach(set => { delete next[set.id]; });
-      selectedIds.forEach(id => { next[id] = true; });
-      return next;
-    });
-  };
 
   const score = useMemo(() => calculateScore(route, t), [route, t]);
   const dayLabel = day === "1" ? t("plan.tabs.day1") : t("plan.tabs.day2");
@@ -184,16 +167,6 @@ export default function PlanPage({
                     {isExportingPng ? t("plan.exportingPng") : t("plan.exportPng")}
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-cyan-500/30 bg-cyan-500/5 text-cyan-400 hover:bg-cyan-500/10"
-                    onClick={handleSyncToFavorites}
-                  >
-                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                    {t("plan.syncFavorites")}
-                  </Button>
-
                   <div className="mx-1 hidden h-4 w-px bg-zinc-800 sm:block" />
 
                   <ActionLink href={googleRouteUrl} disabled={!canOpenRoute}>
@@ -217,9 +190,26 @@ export default function PlanPage({
 
             <RoutePlannerPanel
               route={route}
-              onToggleOption={toggleOption}
-              onSelectAllInGroup={selectAllInGroup}
-              onClearGroup={clearGroup}
+              onToggleOption={(groupId, optionId) => {
+                toggleFavorite(optionId);
+              }}
+              onSelectAllInGroup={(groupId, optionIds) => {
+                setFavorites(prev => {
+                  const next = { ...prev };
+                  optionIds.forEach(id => { next[id] = true; });
+                  return next;
+                });
+              }}
+              onClearGroup={(groupId) => {
+                const group = route.conflictGroups.find(g => g.id === groupId);
+                if (group) {
+                  setFavorites(prev => {
+                    const next = { ...prev };
+                    group.performanceIds.forEach(id => { delete next[id]; });
+                    return next;
+                  });
+                }
+              }}
               isLoadingDirections={isLoadingDirections}
             />
           </>

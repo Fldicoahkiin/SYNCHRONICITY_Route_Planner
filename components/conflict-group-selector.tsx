@@ -86,14 +86,6 @@ function ConflictNode({
       group.selectedPerformanceIds.includes(performance.id),
     );
 
-  const timeRange = useMemo(() => {
-    const starts = group.performances.map((p) => p.startAt);
-    const finishes = group.performances.map((p) => p.finishAt);
-    return {
-      startAt: Math.min(...starts),
-      finishAt: Math.max(...finishes),
-    };
-  }, [group.performances]);
 
   const selectedCount = group.selectedPerformanceIds?.length ?? 0;
   const isHardConflict = selectedCount > 1;
