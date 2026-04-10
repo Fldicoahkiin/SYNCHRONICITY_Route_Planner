@@ -64,10 +64,7 @@ export function LocaleSwitcher() {
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200"
         >
           <Languages className="h-4 w-4" />
-          <span className="uppercase">{locale}</span>
-          <span className="ml-auto text-xs text-zinc-600">
-            {t("localeSwitcher.label")}
-          </span>
+          <span>{options.find((opt) => opt.value === locale)?.label}</span>
         </button>
         {desktopOpen && (
           <div className="absolute bottom-full left-0 right-0 mb-1 rounded-lg border border-zinc-800 bg-zinc-900 py-1 shadow-lg">
@@ -98,8 +95,7 @@ export function LocaleSwitcher() {
         <SheetTrigger>
           <div className="flex shrink-0 whitespace-nowrap h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-100 md:hidden">
             <Languages className="shrink-0 h-4 w-4" />
-            <span>{t("localeSwitcher.label")}</span>
-            <span className="text-xs text-zinc-500">{options.find((opt) => opt.value === locale)?.label}</span>
+            <span>{options.find((opt) => opt.value === locale)?.label}</span>
           </div>
         </SheetTrigger>
         <SheetContent
