@@ -38,22 +38,78 @@ function createWalkLabelIcon(minutes: number, unit: string) {
   });
 }
 
-function createNumberedIcon(color: string, number: number, venueName: string) {
-  const pinSvg = `<svg viewBox="0 0 24 24" width="24" height="28" fill="${color}" stroke="#0a0a0a" stroke-width="2" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6))"><path d="M12 2C7.03 2 3 6.03 3 11c0 6.75 9 11 9 11s9-4.25 9-11c0-4.97-4.03-9-9-9z"/></svg>`;
+const VENUE_OFFSETS: Record<string, [number, number]> = {
+  // Area A dense cluster
+  "o-east": [45, -35],
+  "o-east-2nd": [55, 0],
+  "o-east-3f": [45, 35],
+  "duo": [30, 45],
+  "clubasia": [-35, -50],
+  "o-west": [-45, -35],
+  "7thfloor": [-55, 0],
+  "o-nest": [-45, 35],
+  "o-nest-2nd": [-30, 55],
+  
+  // Area B cluster
+  "quattro": [40, -10],
+  "veats": [-40, 10],
+  "www": [40, -40],
+  "wwwx": [-40, -10],
+  "fows": [-30, 40],
+  "tokio-tokyo": [40, 40],
+  "linecube": [0, -45]
+};
+
+function createCalloutIcon(
+  color: string,
+  numbers: number[],
+  venueName: string,
+  offsetOffset?: [number, number]
+) {
+  const [ox, oy] = offsetOffset || [30, -30];
+  const pinSvg = `<svg viewBox="0 0 24 24" width="20" height="24" fill="${color}" stroke="#0a0a0a" stroke-width="2" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6))"><path d="M12 2C7.03 2 3 6.03 3 11c0 6.75 9 11 9 11s9-4.25 9-11c0-4.97-4.03-9-9-9z"/><circle cx="12" cy="11" r="3" fill="#0a0a0a"/></svg>`;
+
+  const minX = Math.min(0, ox) - 20;
+  const minY = Math.min(0, oy) - 20;
+  const width = Math.abs(ox) + 40;
+  const height = Math.abs(oy) + 40;
+
+  const sequenceHtml = numbers.length > 0 
+    ? `<div style="background:#0a0a0a; color:#fff; border-radius:4px; padding:2px 5px; font-weight:800; font-size:10px; margin-right:4px;">${numbers.join(', ')}</div>`
+    : '';
+
+  const shortName = venueName.replace('Spotify ', '').replace(' MUSIC EXCHANGE', '').replace('SHIBUYA CLUB ', '');
+
   return divIcon({
     className: "",
     html: `
-      <div style="display:flex;align-items:center;margin-left:-12px;margin-top:-28px;pointer-events:none;">
-        <div style="position:relative;width:24px;height:28px;display:flex;justify-content:center;pointer-events:auto;">
+      <div style="position:relative; width:0; height:0;">
+        <svg style="position:absolute; left:${minX}px; top:${minY}px; width:${width}px; height:${height}px; pointer-events:none; z-index:-1;">
+          <line 
+            x1="${-minX}" 
+            y1="${-12 - minY}" 
+            x2="${ox - minX}" 
+            y2="${oy - minY}" 
+            stroke="${color}" 
+            stroke-width="2" 
+            stroke-dasharray="3 3" 
+            style="filter: drop-shadow(0 1px 1px rgba(0,0,0,0.8))"
+          />
+        </svg>
+        <div style="position:absolute; left:-10px; top:-24px; width:20px; height:24px; display:flex; justify-content:center; pointer-events:auto;">
           ${pinSvg}
-          <div style="position:absolute;top:3px;font-weight:800;font-size:11px;color:#0a0a0a;letter-spacing:-0.5px;">${number}</div>
         </div>
-        <div style="background:rgba(24,24,27,0.95);color:#e4e4e7;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;white-space:nowrap;margin-left:2px;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(4px);box-shadow:0 1px 3px rgba(0,0,0,0.4);pointer-events:auto;">${venueName}</div>
+        <div style="position:absolute; left:${ox}px; top:${oy}px; transform:translate(0, -50%); display:flex; align-items:center; z-index: 10;">
+          <div style="transform:translateX(${ox < 0 ? '-100%' : '0'}); display:flex; align-items:center; background:rgba(24,24,27,0.95); color:#e4e4e7; padding:2px; border-radius:6px; border:1px solid ${color}60; backdrop-filter:blur(4px); box-shadow:0 2px 6px rgba(0,0,0,0.6); pointer-events:auto;">
+             ${sequenceHtml}
+             <div style="padding:0 4px; font-size:10px; font-weight:700; white-space:nowrap; letter-spacing:-0.2px;">${shortName}</div>
+          </div>
+        </div>
       </div>
     `,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
-    popupAnchor: [0, -28],
+    popupAnchor: [ox, oy - 12],
   });
 }
 
@@ -104,11 +160,29 @@ export default function VenueMap({
     [favorites]
   );
 
-  const routeVenueIds = useMemo(() => {
-    const sourceSets = routeLegs?.length ? routeLegs.map((leg) => leg.set) : sortedFavorites;
-    const ids = sourceSets.map((s) => s.venueId).filter((v): v is string => !!v);
-    return [...new Set(ids)];
-  }, [routeLegs, sortedFavorites]);
+  const venueVisits = useMemo(() => {
+    const visits = new Map<string, number[]>();
+    if (!routeLegs?.length) return visits;
+
+    const orderedSets = [routeLegs[0].set];
+    for (const leg of routeLegs) {
+      if (leg.nextSet) {
+         orderedSets.push(leg.nextSet);
+      }
+    }
+
+    let step = 1;
+    let currentVenue = "";
+    for (const set of orderedSets) {
+       if (set.venueId && set.venueId !== currentVenue) {
+          const list = visits.get(set.venueId) || [];
+          list.push(step++);
+          visits.set(set.venueId, list);
+          currentVenue = set.venueId;
+       }
+    }
+    return visits;
+  }, [routeLegs]);
 
   const routeSegments = useMemo(
     () =>
@@ -166,22 +240,23 @@ export default function VenueMap({
       />
 
       {venues.map((v) => {
-        const routeIndex = routeVenueIds.indexOf(v.id);
-        const isOnRoute = routeIndex !== -1;
         const popupSets = sortedFavorites
           .filter((s) => s.venueId === v.id)
           .sort((a, b) => a.startAt - b.startAt);
+
+        const visits = venueVisits.get(v.id) || [];
+        const isActive = visits.length > 0 || popupSets.length > 0;
 
         return (
           <Marker
             key={v.id}
             position={[v.lat, v.lng]}
             icon={
-              isOnRoute
-                ? createNumberedIcon(v.color, routeIndex + 1, v.name.split(" ").pop() || v.name)
+              isActive
+                ? createCalloutIcon(v.color, visits, v.name, VENUE_OFFSETS[v.id])
                 : createColorIcon(v.color)
             }
-            zIndexOffset={isOnRoute ? 1000 : 0}
+            zIndexOffset={isActive ? 1000 : 0}
             opacity={1}
           >
             <Popup>
