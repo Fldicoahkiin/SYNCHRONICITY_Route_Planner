@@ -5,6 +5,7 @@ import { venues, venueMap } from "@/lib/data/venues";
 import type { TimetableSet } from "@/lib/data/timetable";
 import { formatTime } from "@/lib/utils/route-planner";
 import { cn } from "@/lib/utils";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 const HEADER_HEIGHT = 54;
 const TIME_COLUMN_WIDTH = 64;
@@ -214,10 +215,20 @@ export const TimetableBoard = memo(function TimetableBoard({
   }, [sets, visibleVenues, compactLayout]);
 
   return (
-    <div
-      className={cn("group relative overflow-x-auto rounded-3xl border border-zinc-800 bg-background", className)}
-      style={{ overflowY: "clip" }}
-    >
+    <div className={cn("group overflow-hidden rounded-3xl border border-zinc-800 bg-background touch-none", className)}>
+      <TransformWrapper
+        initialScale={1}
+        minScale={0.4}
+        maxScale={2.5}
+        centerOnInit={false}
+        wheel={{ step: 0.1 }}
+        limitToBounds={false}
+      >
+        <TransformComponent
+          wrapperClass="!w-full !h-full"
+          contentClass="origin-top-left"
+        >
+          <div className="relative touch-none">
       {/* Horizontal scroll indicator gradient - left */}
       <div className="pointer-events-none sticky left-0 top-0 z-40 h-full w-0.5 bg-gradient-to-b from-cyan-500/60 via-cyan-500/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -400,6 +411,9 @@ export const TimetableBoard = memo(function TimetableBoard({
           })}
         </div>
       </div>
+          </div>
+        </TransformComponent>
+      </TransformWrapper>
     </div>
   );
 });

@@ -553,7 +553,7 @@ export function ImportFromImageButton({
       <Dialog open={state.open} onOpenChange={handleOpenChange}>
         <DialogContent
           showCloseButton={false}
-          className="fixed inset-x-0 bottom-0 z-50 w-full max-w-none translate-x-0 translate-y-0 rounded-b-none rounded-t-2xl border border-zinc-800 bg-background p-0 shadow-2xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl"
+          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[92vh] w-full max-w-none flex-col translate-x-0 translate-y-0 p-0 rounded-b-none rounded-t-2xl border border-zinc-800 bg-background shadow-2xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-w-md sm:max-h-[85vh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl overflow-hidden"
         >
           <DialogTitle className="sr-only">
             {t("timetable.import.title")}
@@ -561,16 +561,18 @@ export function ImportFromImageButton({
           <DialogDescription className="sr-only">
             {t("timetable.import.selectImage")}
           </DialogDescription>
-          <div className="relative">
+          <div className="relative flex flex-1 flex-col overflow-hidden">
             <DialogClose
               aria-label={t("common.close")}
               className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-400 outline-none transition-colors hover:bg-zinc-800 hover:text-zinc-200 focus-visible:ring-2 focus-visible:ring-ring"
             >
               <X className="h-4 w-4" />
             </DialogClose>
-            <ImportModalHeader stage={state.stage} />
+            <div className="shrink-0">
+              <ImportModalHeader stage={state.stage} />
+            </div>
 
-            <div className="px-5 py-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-5 py-6 custom-scrollbar">
               {state.stage === "select" ? (
                 <ImportSelectState
                   error={state.error}
@@ -598,14 +600,16 @@ export function ImportFromImageButton({
               ) : null}
             </div>
 
-            <ImportModalFooter
-              stage={state.stage}
-              selectedCount={state.selectedIds.size}
-              onImport={() => {
-                handleImport();
-              }}
-              onClose={() => handleOpenChange(false)}
-            />
+            <div className="shrink-0">
+              <ImportModalFooter
+                stage={state.stage}
+                selectedCount={state.selectedIds.size}
+                onImport={() => {
+                  handleImport();
+                }}
+                onClose={() => handleOpenChange(false)}
+              />
+            </div>
           </div>
         </DialogContent>
       </Dialog>
