@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { calculateScore } from "@/lib/utils/scoring";
 import { buildAppleMapsRouteUrl, buildGoogleMapsRouteUrl } from "@/lib/utils/map-urls";
+import { venueMap } from "@/lib/data/venues";
 import { getRouteExportStops } from "@/lib/utils/routing";
 import { RoutePlannerPanel } from "@/components/route-planner-panel";
 import { RouteExportSheet } from "@/components/route-export-sheet";
@@ -57,6 +58,21 @@ export default function PlanPage({
 
   const score = useMemo(() => calculateScore(route, t), [route, t]);
   const dayLabel = day === "1" ? t("plan.tabs.day1") : t("plan.tabs.day2");
+  
+  const areaJumpsCount = useMemo(() => {
+    let count = 0;
+    for (const leg of route.legs) {
+      if (leg.nextSet) {
+        const v1 = venueMap.get(leg.set.venueId || "")?.area;
+        const v2 = venueMap.get(leg.nextSet.venueId || "")?.area;
+        if (v1 && v2 && v1 !== v2 && v1 !== "other" && v2 !== "other") {
+          count++;
+        }
+      }
+    }
+    return count;
+  }, [route.legs]);
+
   const exportStops = useMemo(() => getRouteExportStops(route.legs), [route.legs]);
   const googleRouteUrl = useMemo(
     () => buildGoogleMapsRouteUrl(exportStops),
@@ -137,6 +153,11 @@ export default function PlanPage({
                     <MetricItem
                       label={t("plan.branch.totalSets", { count: route.totalSets })}
                       value={String(route.totalSets)}
+                    />
+                    <MetricItem
+                      label="跨区移动"
+                      value={`${areaJumpsCount}次`}
+                      tone={areaJumpsCount > 1 ? "amber" : "emerald"}
                     />
                     <MetricItem
                       label={t("plan.leg.buffer", { minutes: score.averageBufferMinutes })}
